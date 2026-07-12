@@ -1,0 +1,3060 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestão de Empenhos - SETUR</title>
+  <meta name="description" content="Sistema de controle e gestão de empenhos da Secretaria Municipal de Turismo de São Sebastião.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Flatpickr (Multi-date picker) -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pt.js"></script>
+
+
+  <style>
+    /* ── DESIGN TOKENS ───────────────────────────────────────────────────── */
+    :root {
+      --primary-dark:    #001f3f;
+      --primary-color:   #003366;
+      --primary-light:   #1e5c99;
+      --accent-color:    #ffcc00;
+      --accent-hover:    #e6b800;
+      --text-main:       #1e293b;
+      --text-muted:      #64748b;
+      --text-light:      #94a3b8;
+      --bg-main:         #f0f4f8;
+      --bg-card:         #ffffff;
+      --border-color:    #e2e8f0;
+      --status-ok:       #16a34a;
+      --status-ok-bg:    #dcfce7;
+      --status-warning:  #d97706;
+      --status-warning-bg: #fef3c7;
+      --status-error:    #dc2626;
+      --status-error-bg: #fee2e2;
+      --radius-sm:       6px;
+      --radius-md:       10px;
+      --radius-lg:       16px;
+      --shadow-sm:       0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.06);
+      --shadow-md:       0 4px 12px rgba(0,0,0,.10);
+      --shadow-lg:       0 20px 40px rgba(0,0,0,.15);
+    }
+
+    /* ── RESET / BASE ────────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      color: var(--text-main);
+      background-color: var(--bg-main);
+      min-height: 100vh;
+    }
+
+    /* ── HEADER ──────────────────────────────────────────────────────────── */
+    header {
+      background: white;
+      color: var(--primary-color);
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,.08);
+      border-bottom: 2px solid var(--border-color);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .header-title h1 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: -0.3px;
+      line-height: 1.2;
+    }
+    .header-title p { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+    .header-right { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+    .header-user-info { display: flex; align-items: center; gap: 8px; }
+    .user-avatar {
+      width: 34px; height: 34px; border-radius: 50%;
+      background: var(--primary-color); color: white;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 15px; flex-shrink: 0;
+    }
+    .user-name-block { display: flex; flex-direction: column; }
+    .user-name-block strong { font-size: 13px; font-weight: 700; color: var(--text-main); line-height: 1.2; }
+    .user-name-block small { font-size: 10px; color: var(--text-muted); }
+    .header-logo-img { max-height: 48px; width: auto; object-fit: contain; display: block; }
+    .btn-header {
+      background: transparent; color: var(--primary-color); border: 1.5px solid var(--primary-color);
+      font-size: 12px; padding: 5px 10px; border-radius: var(--radius-sm);
+      cursor: pointer; font-family: 'Inter Tight', sans-serif; font-weight: 600;
+      transition: background .2s, color .2s;
+    }
+    .btn-header:hover { background: var(--primary-color); color: white; }
+
+    /* ── CONTAINER / NAV ─────────────────────────────────────────────────── */
+    .container { max-width: 1400px; margin: 0 auto; padding: 24px 20px; }
+    .nav-tabs {
+      display: flex; gap: 4px; margin-bottom: 20px;
+      background: var(--bg-card); padding: 6px; border-radius: var(--radius-md);
+      box-shadow: var(--shadow-sm); flex-wrap: wrap;
+    }
+    .tab-btn {
+      padding: 8px 18px; border: none; background: transparent; cursor: pointer;
+      font-family: 'Inter Tight', sans-serif; font-size: 13.5px; font-weight: 600;
+      color: var(--text-muted); border-radius: var(--radius-sm); transition: all .2s;
+    }
+    .tab-btn:hover { background: var(--bg-main); color: var(--text-main); }
+    .tab-btn.active {
+      background: var(--primary-color); color: white;
+      box-shadow: var(--shadow-sm);
+    }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* ── CARDS ───────────────────────────────────────────────────────────── */
+    .card-form {
+      background: var(--bg-card); border-radius: var(--radius-md);
+      padding: 24px; box-shadow: var(--shadow-sm); border: 1px solid var(--border-color);
+    }
+    .dashboard-summary {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px; margin-bottom: 20px;
+    }
+    .summary-card {
+      background: var(--bg-card); border-radius: var(--radius-md); padding: 18px 20px;
+      box-shadow: var(--shadow-sm); border: 1px solid var(--border-color);
+      border-left: 4px solid var(--primary-light);
+      transition: transform .2s, box-shadow .2s;
+    }
+    .summary-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+    .summary-card.accent-ok   { border-left-color: var(--status-ok); }
+    .summary-card.accent-warning { border-left-color: var(--status-warning); }
+    .summary-card.accent-error   { border-left-color: var(--status-error); }
+    .summary-card-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--text-muted); margin-bottom: 6px; }
+    .summary-card-value { font-family: 'Outfit', sans-serif; font-size: 22px; font-weight: 800; color: var(--primary-color); }
+
+    /* ── FILTER BAR ──────────────────────────────────────────────────────── */
+    .view-filter-bar {
+      display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+      background: var(--bg-card); padding: 12px 16px; border-radius: var(--radius-sm);
+      margin-bottom: 20px; border: 1px solid var(--border-color); box-shadow: var(--shadow-sm);
+    }
+    .view-filter-bar label { font-size: 12px; font-weight: 700; white-space: nowrap; color: var(--text-muted); }
+    .filter-bar {
+      display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end;
+      background: var(--bg-card); padding: 14px 16px; border-radius: var(--radius-sm);
+      margin-bottom: 16px; border: 1px solid var(--border-color); box-shadow: var(--shadow-sm);
+    }
+    .filter-bar .form-group { flex: 1; min-width: 140px; margin: 0; }
+
+    /* ── STOCK GRID ──────────────────────────────────────────────────────── */
+    .stock-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
+    .stock-card {
+      background: white; border-radius: var(--radius-md); padding: 14px 16px;
+      border: 1px solid var(--border-color); box-shadow: var(--shadow-sm);
+      cursor: pointer; transition: all .2s;
+      display: flex; flex-direction: column; gap: 6px;
+    }
+    .stock-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); border-color: var(--primary-light); }
+    .stock-card-header { display: flex; justify-content: space-between; align-items: center; }
+    .item-code { font-family: 'Outfit', sans-serif; font-size: 13px; font-weight: 800; color: var(--primary-color); }
+    .item-desc { font-size: 12.5px; font-weight: 600; color: var(--text-main); line-height: 1.3; }
+    .item-region { font-size: 11px; color: var(--text-muted); font-weight: 500; }
+    .stock-bar-container { height: 6px; background: #e2e8f0; border-radius: 3px; overflow: hidden; margin-top: 8px; }
+    .stock-bar { height: 100%; border-radius: 3px; background: var(--status-ok); transition: width .4s ease; }
+    .stock-numbers { display: flex; justify-content: space-between; align-items: center; font-size: 11.5px; margin-top: 4px; }
+    .stock-label { font-weight: 600; color: var(--text-muted); }
+    .stock-card-footer { display: flex; justify-content: space-between; font-size: 10.5px; color: var(--text-muted); margin-top: 2px; }
+    .status-badge-ok      { background: var(--status-ok-bg);      color: var(--status-ok); }
+    .status-badge-warning { background: var(--status-warning-bg);  color: var(--status-warning); }
+    .status-badge-error   { background: var(--status-error-bg);    color: var(--status-error); }
+    .stock-status-badge {
+      font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 10px;
+      text-transform: uppercase; letter-spacing: .3px;
+    }
+
+    /* ── SECTION TITLE ───────────────────────────────────────────────────── */
+    .section-title {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 16px; gap: 12px;
+    }
+    .section-title h2, .section-title h3 {
+      font-family: 'Inter Tight', sans-serif; font-size: 18px; font-weight: 800;
+      color: var(--primary-color);
+    }
+
+    /* ── FORM ────────────────────────────────────────────────────────────── */
+    .form-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 14px; margin-bottom: 14px;
+    }
+    .form-grid-full { grid-column: 1 / -1; }
+    .form-group { display: flex; flex-direction: column; gap: 4px; }
+    .form-group label { font-size: 12px; font-weight: 700; color: var(--text-muted); }
+    .form-control {
+      width: 100%; padding: 8px 10px; font-size: 13.5px;
+      font-family: 'Inter', sans-serif; color: var(--text-main);
+      border: 1.5px solid var(--border-color); border-radius: var(--radius-sm);
+      background: white; transition: border-color .2s, box-shadow .2s;
+    }
+    .form-control:focus {
+      outline: none; border-color: var(--primary-light);
+      box-shadow: 0 0 0 3px rgba(30,92,153,.15);
+    }
+    .form-control:disabled { background: #f8fafc; color: var(--text-muted); }
+    textarea.form-control { resize: vertical; min-height: 70px; }
+
+    /* ── INFO BOX ────────────────────────────────────────────────────────── */
+    .info-box {
+      background: linear-gradient(135deg, #f0f7ff 0%, #e8f4fd 100%);
+      border: 1.5px solid #93c5fd; border-radius: var(--radius-sm);
+      padding: 12px 16px; margin-bottom: 14px; display: none;
+    }
+    .info-box-grid { display: flex; flex-wrap: wrap; gap: 8px 20px; }
+    .info-box-item { display: flex; flex-direction: column; gap: 1px; }
+    .info-box-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; color: #3b82f6; }
+    .info-box-value { font-size: 14px; font-weight: 800; color: var(--primary-color); }
+    .highlight-ok      { color: var(--status-ok) !important; }
+    .highlight-warning { color: var(--status-warning) !important; }
+    .highlight-error   { color: var(--status-error) !important; }
+
+    /* ── TEMP ITEMS LIST ─────────────────────────────────────────────────── */
+    .added-items-list { margin-bottom: 16px; }
+    .added-item-row {
+      display: flex; justify-content: space-between; align-items: flex-start;
+      background: #f8fafc; border: 1px solid var(--border-color); border-radius: var(--radius-sm);
+      padding: 10px 14px; margin-bottom: 6px; font-size: 13px;
+    }
+
+    /* ── TABLE ───────────────────────────────────────────────────────────── */
+    .table-container { overflow-x: auto; border-radius: var(--radius-md); box-shadow: var(--shadow-sm); }
+    table { width: 100%; border-collapse: collapse; background: var(--bg-card); font-size: 12.5px; }
+    thead tr { background: var(--primary-color); }
+    th {
+      padding: 10px 12px; text-align: left; font-family: 'Inter Tight', sans-serif;
+      font-size: 11px; font-weight: 700; color: white; text-transform: uppercase;
+      letter-spacing: .4px; white-space: nowrap;
+    }
+    td {
+      padding: 9px 12px; border-bottom: 1px solid var(--border-color);
+      vertical-align: middle; color: var(--text-main);
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:nth-child(even) td { background-color: #fafbfc; }
+    tr:hover td { background-color: #f0f4f8 !important; }
+    .clickable-td { cursor: pointer; }
+    .clickable-td:hover { color: var(--primary-color); text-decoration: underline; }
+    .table-badge {
+      display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 7px;
+      border-radius: 10px; text-transform: uppercase; letter-spacing: .3px;
+    }
+
+    /* Status inline select (within table) */
+    .status-inline-select {
+      font-family: 'Inter Tight', sans-serif; font-size: 11px; font-weight: 700;
+      padding: 3px 6px; border-radius: var(--radius-sm); border: none;
+      cursor: pointer; width: 100%; min-width: 95px;
+    }
+    .status-inline-select:focus { outline: 1px solid var(--primary-light); }
+
+    /* ── BUTTONS ─────────────────────────────────────────────────────────── */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      padding: 7px 14px; border: none; border-radius: var(--radius-sm);
+      font-family: 'Inter Tight', sans-serif; font-size: 13px; font-weight: 600;
+      cursor: pointer; transition: all .2s; gap: 5px; white-space: nowrap;
+    }
+    .btn:disabled { opacity: .5; cursor: not-allowed; }
+    .btn-primary { background: var(--primary-color); color: white; }
+    .btn-primary:hover:not(:disabled) { background: var(--primary-dark); }
+    .btn-secondary { background: var(--border-color); color: var(--text-main); }
+    .btn-secondary:hover:not(:disabled) { background: #d1d5db; }
+    .btn-danger { background: var(--status-error-bg); color: var(--status-error); }
+    .btn-danger:hover:not(:disabled) { background: var(--status-error); color: white; }
+
+    /* ── MODALS ──────────────────────────────────────────────────────────── */
+    .modal-backdrop {
+      display: none; position: fixed; inset: 0; z-index: 900;
+      background: rgba(0,0,0,.55); backdrop-filter: blur(3px);
+      justify-content: center; align-items: center; padding: 20px;
+    }
+    .modal-backdrop.open { display: flex; }
+    .modal-window {
+      background: white; border-radius: var(--radius-lg); width: 100%; max-width: 760px;
+      box-shadow: var(--shadow-lg); overflow: hidden; max-height: 90vh;
+      display: flex; flex-direction: column; animation: slideUp .25s ease;
+    }
+    @keyframes slideUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    .modal-header {
+      background: var(--primary-color); color: white; padding: 14px 20px;
+      display: flex; justify-content: space-between; align-items: center; flex-shrink: 0;
+    }
+    .modal-header h3 { font-family: 'Inter Tight', sans-serif; font-size: 16px; font-weight: 800; }
+    .modal-close-btn {
+      background: transparent; border: none; color: white; font-size: 22px;
+      cursor: pointer; line-height: 1; padding: 0 4px; opacity: .8;
+      font-weight: 700;
+    }
+    .modal-close-btn:hover { opacity: 1; }
+    .modal-body { padding: 20px; overflow-y: auto; flex: 1; }
+    .modal-footer {
+      padding: 14px 20px; border-top: 1px solid var(--border-color);
+      display: flex; justify-content: flex-end; gap: 10px; flex-shrink: 0;
+    }
+    .details-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .detail-item { display: flex; flex-direction: column; gap: 2px; }
+    .detail-item.full-width { grid-column: 1 / -1; }
+    .detail-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; color: var(--text-muted); }
+    .detail-value { font-size: 14px; font-weight: 700; color: var(--text-main); }
+
+    /* ── LOGIN OVERLAY ───────────────────────────────────────────────────── */
+    .login-overlay {
+      position: fixed; inset: 0; z-index: 9999;
+      background: linear-gradient(135deg, #001020 0%, var(--primary-dark) 40%, #1e4a7a 100%);
+      display: flex; justify-content: center; align-items: center;
+      padding: 20px; opacity: 0; pointer-events: none;
+      transition: opacity .35s ease;
+    }
+    .login-overlay.visible { opacity: 1; pointer-events: all; }
+    .login-card {
+      background: white; border-radius: var(--radius-lg); padding: 36px 40px;
+      width: 100%; max-width: 400px; box-shadow: var(--shadow-lg);
+      border-top: 4px solid var(--accent-color); animation: slideUp .3s ease;
+    }
+    .login-logo { text-align: center; margin-bottom: 20px; }
+    .login-logo img { max-height: 64px; width: auto; object-fit: contain; }
+    .login-card h2 {
+      font-family: 'Outfit', sans-serif; font-size: 22px; font-weight: 800;
+      color: var(--primary-color); text-align: center; margin-bottom: 4px;
+    }
+    .login-subtitle { font-size: 12px; color: var(--text-muted); text-align: center; margin-bottom: 24px; }
+    .login-error {
+      background: var(--status-error-bg); color: var(--status-error); padding: 8px 12px;
+      border-radius: var(--radius-sm); font-size: 13px; font-weight: 600; margin-bottom: 12px;
+    }
+
+    /* ── PASSWORD STRENGTH ───────────────────────────────────────────────── */
+    #password-strength-bar {
+      height: 4px; border-radius: 2px; background: #e2e8f0; margin-top: 6px; overflow: hidden;
+    }
+    #password-strength-fill { height: 100%; width: 0; transition: all .3s ease; border-radius: 2px; }
+
+    /* ── ADMIN TABS ──────────────────────────────────────────────────────── */
+    .admin-tabs {
+      display: flex; gap: 4px; margin-bottom: 20px;
+      border-bottom: 2px solid var(--border-color);
+    }
+    .admin-tab-btn {
+      padding: 8px 20px; background: transparent; border: none; cursor: pointer;
+      font-family: 'Inter Tight', sans-serif; font-size: 14px; font-weight: 600;
+      color: var(--text-muted); border-bottom: 2.5px solid transparent; margin-bottom: -2px;
+      transition: all .2s;
+    }
+    .admin-tab-btn.active { color: var(--primary-color); border-bottom-color: var(--primary-color); }
+    .admin-tab-btn:hover { color: var(--primary-color); }
+    .admin-tab-content { display: none; }
+    .admin-tab-content.active { display: block; }
+
+    /* ── TOAST ───────────────────────────────────────────────────────────── */
+    .toast {
+      position: fixed; bottom: 24px; right: 24px; z-index: 9000;
+      padding: 12px 20px; border-radius: var(--radius-sm);
+      font-size: 13.5px; font-weight: 600; box-shadow: var(--shadow-md);
+      background: var(--primary-color); color: white;
+      transform: translateY(80px); opacity: 0; transition: all .35s cubic-bezier(.34,1.56,.64,1);
+      max-width: 340px;
+    }
+    .toast.show { transform: translateY(0); opacity: 1; }
+    .toast.error   { background: var(--status-error); }
+    .toast.warning { background: var(--status-warning); }
+    .toast.success { background: var(--status-ok); }
+
+    /* ── LOADING ─────────────────────────────────────────────────────────── */
+    .loading-overlay {
+      position: fixed; inset: 0; z-index: 8000;
+      background: rgba(0,31,63,.7); backdrop-filter: blur(2px);
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px;
+    }
+    .loading-overlay.hidden { display: none; }
+    .spinner {
+      width: 42px; height: 42px; border: 4px solid rgba(255,255,255,.25);
+      border-top-color: var(--accent-color); border-radius: 50%;
+      animation: spin .8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-text { color: white; font-size: 14px; font-weight: 600; font-family: 'Inter Tight', sans-serif; }
+
+    /* ── FORNECEDOR CNPJ INFO ────────────────────────────────────────────── */
+    #fornecedor-cnpj-info {
+      display: none; align-items: center; font-size: 12px; color: var(--text-muted);
+      padding: 5px 10px; background: #f1f5f9; border-radius: var(--radius-sm);
+      border: 1px solid var(--border-color); gap: 4px;
+    }
+
+    /* ── PRINT ───────────────────────────────────────────────────────────── */
+    .only-print { display: none; }
+    @media print {
+      .only-print { display: block; }
+      header, .container > .nav-tabs, #loading, .toast { display: none !important; }
+      .tab-content { display: none !important; }
+      #relatorio-impressao-geral { display: block !important; }
+      .print-header-image { margin-bottom: 12px; }
+      body { background: white; font-size: 11px; }
+      table { font-size: 10px; page-break-inside: auto; }
+      tr { page-break-inside: avoid; }
+      td, th { padding: 5px 6px !important; }
+      .btn-hide-print { display: none !important; }
+      .status-inline-select {
+        border: none; background: transparent !important;
+        appearance: none; -webkit-appearance: none; font-weight: 700;
+        pointer-events: none;
+      }
+      .modal-backdrop { display: none !important; }
+      .login-overlay { display: none !important; }
+    }
+    @media screen {
+      body.print-geral-relatorio .tab-content,
+      body.print-geral-relatorio header,
+      body.print-geral-relatorio .container > .nav-tabs { display: none !important; }
+      body.print-geral-relatorio .only-print { display: block !important; }
+      body.print-geral-relatorio .container { padding: 0; }
+    }
+  </style>
+</head>
+<body style="visibility: hidden;">
+
+  <!-- ── LOGIN OVERLAY ─────────────────────────────────────────────────── -->
+  <div id="login-overlay" class="login-overlay" role="dialog" aria-modal="true" aria-label="Login">
+    <div class="login-card">
+      <div class="login-logo">
+        <img src="https://i.ibb.co/BVCYTPmR/manualmarca-pmss25-28-TURISMO-AZUL.png" alt="SETUR - Secretaria Municipal de Turismo">
+      </div>
+      <h2>Gestão de Empenhos</h2>
+      <p class="login-subtitle">Secretaria Municipal de Turismo de São Sebastião</p>
+      <form id="form-login" onsubmit="handleLogin(event)">
+        <div class="form-group" style="margin-bottom:14px;">
+          <label for="login-input">Usuário</label>
+          <input type="text" id="login-input" class="form-control" placeholder="Seu login" autocomplete="username" required>
+        </div>
+        <div class="form-group" style="margin-bottom:20px;">
+          <label for="senha-input">Senha</label>
+          <div style="position:relative;">
+            <input type="password" id="senha-input" class="form-control" placeholder="••••••••" autocomplete="current-password" required style="padding-right:40px;">
+            <button type="button" onclick="toggleSenha('senha-input', this)" tabindex="-1"
+              style="position:absolute; right:10px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; padding:0; color:var(--text-muted); display:flex; align-items:center;">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+        </div>
+        <div id="login-error" class="login-error" style="display:none;" role="alert"></div>
+        <button type="submit" id="btn-entrar" class="btn btn-primary" style="width:100%; padding:11px; font-size:14px;">Entrar no Sistema</button>
+        <div id="login-loading" style="display:none; text-align:center; margin-top:12px; font-size:12px; color:var(--text-muted);">Verificando credenciais...</div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ── TROCAR SENHA MODAL ──────────────────────────────────────────────── -->
+  <div id="modal-trocar-senha" class="modal-backdrop" role="dialog" aria-modal="true">
+    <div class="modal-window" style="max-width:480px;">
+      <div class="modal-header">
+        <h3 id="modal-trocar-senha-titulo">Alterar Senha</h3>
+      </div>
+      <div class="modal-body">
+        <p id="modal-trocar-senha-msg" style="font-size:13px; color:var(--text-muted); margin-bottom:18px;"></p>
+        <div id="div-senha-atual" class="form-group" style="margin-bottom:12px;">
+          <label for="senha-atual-input">Senha Atual</label>
+          <div style="position:relative;">
+            <input type="password" id="senha-atual-input" class="form-control" placeholder="Senha atual" style="padding-right:40px;">
+            <button type="button" onclick="toggleSenha('senha-atual-input', this)" tabindex="-1"
+              style="position:absolute; right:10px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; padding:0; color:var(--text-muted); display:flex; align-items:center;">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="form-group" style="margin-bottom:6px;">
+          <label for="nova-senha-input">Nova Senha (mínimo 8 caracteres)</label>
+          <div style="position:relative;">
+            <input type="password" id="nova-senha-input" class="form-control" placeholder="••••••••" oninput="checkPasswordStrength(this.value)" style="padding-right:40px;">
+            <button type="button" onclick="toggleSenha('nova-senha-input', this)" tabindex="-1"
+              style="position:absolute; right:10px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; padding:0; color:var(--text-muted); display:flex; align-items:center;">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+        </div>
+        <div id="password-strength-bar"><div id="password-strength-fill"></div></div>
+        <div id="password-strength-text" style="font-size:11px; margin-top:4px; color:var(--text-muted);"></div>
+        <div class="form-group" style="margin-top:12px; margin-bottom:16px;">
+          <label for="confirmar-senha-input">Confirmar Nova Senha</label>
+          <div style="position:relative;">
+            <input type="password" id="confirmar-senha-input" class="form-control" placeholder="Repita a nova senha" style="padding-right:40px;">
+            <button type="button" onclick="toggleSenha('confirmar-senha-input', this)" tabindex="-1"
+              style="position:absolute; right:10px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; padding:0; color:var(--text-muted); display:flex; align-items:center;">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+        </div>
+        <div id="trocar-senha-error" style="font-size:13px; color:var(--status-error); display:none; font-weight:600;"></div>
+      </div>
+      <div class="modal-footer">
+        <button id="btn-cancelar-trocar-senha" class="btn btn-secondary" onclick="fecharModalSenha()" style="display:none;">Cancelar</button>
+        <button class="btn btn-primary" onclick="executarTrocaSenha()">Salvar Nova Senha</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── CONFIRM MODAL ──────────────────────────────────────────────────── -->
+  <div id="modal-confirm" class="modal-backdrop" role="dialog" aria-modal="true">
+    <div class="modal-window" style="max-width:400px;">
+      <div class="modal-header">
+        <h3 id="modal-confirm-title">Confirmar</h3>
+      </div>
+      <div class="modal-body" style="padding:24px;">
+        <p id="modal-confirm-msg" style="font-size:14px; line-height:1.5;"></p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="resolveConfirm(false)">Cancelar</button>
+        <button id="btn-confirm-ok" class="btn" onclick="resolveConfirm(true)">Confirmar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── NOVO USUÁRIO MODAL ─────────────────────────────────────────────── -->
+  <div id="modal-novo-usuario" class="modal-backdrop" role="dialog" aria-modal="true">
+    <div class="modal-window" style="max-width:500px;">
+      <div class="modal-header">
+        <h3>Novo Usuário</h3>
+        <button class="modal-close-btn" onclick="fecharModalNovoUsuario()">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-grid" style="margin-bottom:14px;">
+          <div class="form-group">
+            <label for="nu-login">Login (único, sem espaços)</label>
+            <input type="text" id="nu-login" class="form-control" placeholder="Ex: maria.souza">
+          </div>
+          <div class="form-group">
+            <label for="nu-nome">Nome Completo</label>
+            <input type="text" id="nu-nome" class="form-control" placeholder="Ex: Maria Souza">
+          </div>
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="nu-perfil">Perfil</label>
+            <select id="nu-perfil" class="form-control">
+              <option value="usuario" selected>Usuário</option>
+              <option value="admin">Administrador</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="nu-senha">Senha Inicial (temporária)</label>
+            <input type="text" id="nu-senha" class="form-control" placeholder="Ex: Setur@2026">
+          </div>
+        </div>
+        <p style="font-size:11.5px; color:var(--text-muted); margin-top:12px;">O usuário será obrigado a definir uma nova senha pessoal no primeiro acesso.</p>
+        <div id="nu-error" style="color:var(--status-error); font-size:13px; margin-top:10px; font-weight:600; display:none;"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="fecharModalNovoUsuario()">Cancelar</button>
+        <button class="btn btn-primary" onclick="salvarNovoUsuario()">Criar Usuário</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── DETAIL MODAL ───────────────────────────────────────────────────── -->
+  <div id="detail-modal" class="modal-backdrop" onclick="closeDetailModal(event)" role="dialog" aria-modal="true">
+    <div class="modal-window">
+      <div class="modal-header">
+        <h3 id="modal-title">Detalhes</h3>
+        <button class="modal-close-btn" onclick="closeDetailModal(null)">×</button>
+      </div>
+      <div class="modal-body">
+        <div id="modal-content"></div>
+      </div>
+      <div class="modal-footer" id="modal-footer-btns"></div>
+    </div>
+  </div>
+
+  <!-- ── CUSTOMIZAR COLUNAS MODAL ─────────────────────────────────────────── -->
+  <div id="modal-colunas-relatorio" class="modal-backdrop" role="dialog" aria-modal="true">
+    <div class="modal-window" style="max-width:420px;">
+      <div class="modal-header">
+        <h3>Customizar Colunas</h3>
+        <button class="modal-close-btn" onclick="fecharModalColunas()">×</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size:12.5px; color:var(--text-muted); margin-bottom:14px; line-height:1.4;">Selecione as colunas que deseja incluir no relatório impresso:</p>
+        <div id="colunas-checkbox-container" style="display:flex; flex-direction:column; gap:10px; max-height:280px; overflow-y:auto; padding-right:6px;">
+          <!-- Checkboxes generated dynamically -->
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="fecharModalColunas()">Cancelar</button>
+        <button id="btn-gerar-relatorio" class="btn btn-primary">Gerar PDF</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── PRINT HEADER / REPORT ─────────────────────────────────────────── -->
+  <div class="print-header-image only-print">
+    <img src="https://i.ibb.co/Gf49ZkcT/Cabe-alho.png" alt="Prefeitura de São Sebastião" style="width:100%; max-height:110px; object-fit:contain;">
+  </div>
+  <div id="relatorio-impressao-geral" class="only-print" style="padding:0 20px;">
+    <div style="text-align:center; margin-bottom:18px; font-family:'Inter Tight',sans-serif;">
+      <h2 id="print-geral-titulo" style="font-size:17px; font-weight:800; color:#003366;"></h2>
+      <p style="font-size:11px; color:#555; margin-top:4px;">Gerado em: <span id="print-geral-data"></span></p>
+    </div>
+    <div id="print-table-wrapper"></div>
+  </div>
+
+  <!-- ── LOADING ────────────────────────────────────────────────────────── -->
+  <div id="loading" class="loading-overlay hidden" aria-live="polite">
+    <div class="spinner"></div>
+    <div class="loading-text" id="loading-message">Carregando...</div>
+  </div>
+
+  <!-- ── TOAST ──────────────────────────────────────────────────────────── -->
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <!-- ── HEADER ─────────────────────────────────────────────────────────── -->
+  <header>
+    <div class="header-title">
+      <h1>Controle de Saldo de Empenhos</h1>
+      <p>Secretaria Municipal de Turismo — Prefeitura de São Sebastião</p>
+    </div>
+    <div class="header-right">
+      <div class="header-user-info" id="header-user-info" style="display:none;">
+        <div class="user-avatar" id="user-avatar" aria-hidden="true">A</div>
+        <div class="user-name-block">
+          <strong id="user-name-display"></strong>
+          <small id="user-role-display"></small>
+        </div>
+        <button class="btn-header" onclick="openTrocarSenhaModal(false)">Alterar Senha</button>
+        <button class="btn-header" onclick="handleLogout()">Sair</button>
+      </div>
+      <div>
+        <img src="https://i.ibb.co/BVCYTPmR/manualmarca-pmss25-28-TURISMO-AZUL.png" alt="SETUR" class="header-logo-img">
+      </div>
+    </div>
+  </header>
+
+  <!-- ── MAIN CONTENT ───────────────────────────────────────────────────── -->
+  <div class="container">
+    <nav class="nav-tabs" role="tablist" aria-label="Seções do sistema">
+      <button id="tab-btn-dashboard"   class="tab-btn active" role="tab" onclick="switchTab('dashboard')">Visão Geral</button>
+      <button id="tab-btn-lancamento"  class="tab-btn"        role="tab" onclick="switchTab('lancamento')">Nova Solicitação</button>
+      <button id="tab-btn-relatorios"  class="tab-btn"        role="tab" onclick="switchTab('relatorios')">Histórico de Saídas</button>
+      <button id="tab-btn-abastecer"   class="tab-btn"        role="tab" onclick="switchTab('abastecer')">Cadastrar Novo Empenho</button>
+      <button id="tab-btn-admin"       class="tab-btn" role="tab"
+              style="display:none; background:rgba(255,204,0,.15); color:#7a5c00;"
+              onclick="switchTab('admin')">Administração</button>
+    </nav>
+
+    <!-- ── TAB: VISÃO GERAL ─────────────────────────────────────────────── -->
+    <div id="dashboard" class="tab-content active" role="tabpanel">
+      <div class="dashboard-summary" id="dashboard-cards"></div>
+
+      <div class="view-filter-bar">
+        <label for="dashboard-empenho-filter">Empenho:</label>
+        <select id="dashboard-empenho-filter" class="form-control" style="max-width:260px; font-weight:600;" onchange="renderStockLevels()">
+          <option value="todos">Todos os Empenhos</option>
+        </select>
+
+        <label for="dashboard-fornecedor-filter">Fornecedor:</label>
+        <select id="dashboard-fornecedor-filter" class="form-control" style="max-width:220px;" onchange="onFornecedorDashChange()">
+          <option value="">Todos</option>
+        </select>
+
+        <div id="fornecedor-cnpj-info">
+          CNPJ: <strong id="fornecedor-cnpj-value"></strong>
+        </div>
+
+        <div style="margin-left:auto;">
+          <button class="btn btn-secondary" style="padding:7px 14px; font-size:12.5px;" onclick="printEstoqueGeral()">
+            Relatório de Estoque (PDF)
+          </button>
+        </div>
+      </div>
+
+      <div id="stock-groups-container"></div>
+    </div>
+
+    <!-- ── TAB: NOVA SOLICITAÇÃO ─────────────────────────────────────────── -->
+    <div id="lancamento" class="tab-content" role="tabpanel">
+      <div class="card-form">
+        <div class="section-title" style="margin-bottom:20px;">
+          <h2 id="form-solicitacao-title">Registrar Utilização de Empenho</h2>
+          <button type="button" id="btn-repetir-ultimo" class="btn btn-secondary" style="display:none; padding:6px 12px; font-size:12px;" onclick="repetirDadosDoUltimoEvento()"></button>
+        </div>
+
+        <form id="form-solicitacao" onsubmit="handleFormSubmit(event)">
+          <input type="hidden" id="edit-solicitacao-id" value="">
+
+          <!-- CAMPOS OBRIGATÓRIOS -->
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="numeroSolicitacao">Número da Solicitação <span style="color:#e53e3e;">*</span></label>
+              <input type="text" id="numeroSolicitacao" class="form-control" placeholder="Ex: 0074/2026" required>
+            </div>
+            <div class="form-group">
+              <label for="numeroEmpenho">Empenho Vinculado <span style="color:#e53e3e;">*</span></label>
+              <select id="numeroEmpenho" class="form-control" onchange="onEmpenhoSelect()" required>
+                <option value="">Selecione...</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="codigoItem">Item / Serviço <span style="color:#e53e3e;">*</span></label>
+              <select id="codigoItem" class="form-control" onchange="onItemSelect()" required disabled>
+                <option value="">Selecione o empenho primeiro...</option>
+              </select>
+            </div>
+          </div>
+
+          <div id="item-info-box" class="info-box">
+            <div style="font-weight:800; margin-bottom:8px; font-size:11px; text-transform:uppercase; letter-spacing:.5px; color:#1e40af;">Saldo do Item Selecionado</div>
+            <div class="info-box-grid">
+              <div class="info-box-item"><span class="info-box-label">Descrição</span><span class="info-box-value" id="info-desc">-</span></div>
+              <div class="info-box-item"><span class="info-box-label">Região</span><span class="info-box-value" id="info-regiao">-</span></div>
+              <div class="info-box-item"><span class="info-box-label">Saldo Disponível</span><span class="info-box-value" id="info-saldo">-</span></div>
+              <div class="info-box-item"><span class="info-box-label">Valor Unitário</span><span class="info-box-value" id="info-valor-un">-</span></div>
+            </div>
+          </div>
+
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="nomeEvento">Nome do Evento <span style="color:#e53e3e;">*</span></label>
+              <input type="text" id="nomeEvento" class="form-control" list="eventos-datalist"
+                     placeholder="Ex: Varanda Musical (Paúba)"
+                     oninput="onNomeEventoInput(this.value)"
+                     onchange="checkEventoRepetido(this.value)" required>
+              <datalist id="eventos-datalist"></datalist>
+            </div>
+            <div class="form-group">
+              <label for="qtyConsumida">Quantidade Solicitada (Diárias) <span style="color:#e53e3e;">*</span></label>
+              <input type="number" id="qtyConsumida" class="form-control" min="1" step="1"
+                     oninput="validateQuantity()" required disabled>
+              <span id="qty-validation-msg" style="font-size:11px; font-weight:700; margin-top:2px;"></span>
+            </div>
+          </div>
+
+          <!-- Campo multi-datas do evento com Flatpickr -->
+          <div class="form-group" style="margin-top:4px; margin-bottom:12px;">
+            <label for="datasEvento">Datas do Evento <span style="color:#e53e3e;">*</span></label>
+            <div style="position:relative;">
+              <input type="text" id="datasEvento" class="form-control" placeholder="Clique para selecionar as datas..." required readonly style="background-color:#ffffff; cursor:pointer; padding-right:40px;">
+              <span style="position:absolute; right:12px; top:50%; transform:translateY(-50%); color:var(--text-muted); pointer-events:none; display:flex; align-items:center;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              </span>
+            </div>
+            <span style="font-size:11px; color:var(--text-muted); margin-top:4px; display:block;">Selecione uma ou mais datas diretamente no calendário que será aberto</span>
+          </div>
+
+          <!-- DIVISÓRIA CAMPOS OPCIONAIS -->
+          <div style="display:flex; align-items:center; gap:12px; margin: 18px 0 14px;">
+            <div style="flex:1; height:1px; background: linear-gradient(to right, #cbd5e1, transparent);"></div>
+            <span style="font-size:11px; font-weight:600; color:#94a3b8; letter-spacing:0.8px; white-space:nowrap;">CAMPOS OPCIONAIS</span>
+            <div style="flex:1; height:1px; background: linear-gradient(to left, #cbd5e1, transparent);"></div>
+          </div>
+
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="dataSolicitacao">Data do Registro</label>
+              <input type="date" id="dataSolicitacao" class="form-control">
+            </div>
+          </div>
+
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="horarioInicio">Horário de Início</label>
+              <input type="time" id="horarioInicio" class="form-control">
+            </div>
+            <div class="form-group">
+              <label for="horarioFim">Horário de Término</label>
+              <input type="time" id="horarioFim" class="form-control">
+            </div>
+            <div class="form-group">
+              <label for="localEvento">Local / Endereço Completo</label>
+              <input type="text" id="localEvento" class="form-control" placeholder="Ex: Praça Pôr do Sol, Boiçucanga">
+            </div>
+          </div>
+
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="respMontagem">Responsável pela Montagem</label>
+              <input type="text" id="respMontagem" class="form-control" placeholder="Ex: SORMANI">
+            </div>
+            <div class="form-group">
+              <label for="contatoResp">Contato Telefônico</label>
+              <input type="text" id="contatoResp" class="form-control" placeholder="Ex: (11) 99632-6204">
+            </div>
+            <div class="form-group">
+              <label for="status">Status da Execução</label>
+              <select id="status" class="form-control">
+                <option value="Solicitado" selected>Solicitado</option>
+                <option value="Confirmado">Confirmado</option>
+                <option value="Realizado">Realizado</option>
+                <option value="Cancelado">Cancelado</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="numeroNotaFiscal">Nota Fiscal (Opcional)</label>
+              <input type="text" id="numeroNotaFiscal" class="form-control" placeholder="Ex: NF 1234">
+            </div>
+            <div class="form-group" style="grid-column: 2 / -1;">
+              <label for="solicitacao-pdf">Anexar PDF da OS / Solicitação (Opcional)</label>
+              <input type="file" id="solicitacao-pdf" class="form-control" accept="application/pdf">
+              <div id="solicitacao-pdf-atual" style="font-size:11px; margin-top:4px; font-weight:600; display:none;"></div>
+            </div>
+          </div>
+
+          <div class="form-grid">
+            <div class="form-group form-grid-full">
+              <label for="observacoes">Observações</label>
+              <textarea id="observacoes" class="form-control" rows="2" placeholder="Notas adicionais..."></textarea>
+            </div>
+          </div>
+
+          <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:12px;">
+            <button type="button" id="btn-cancel-edit" class="btn btn-secondary" style="display:none;" onclick="cancelarEdicao()">Cancelar Edição</button>
+            <button type="button" class="btn btn-secondary" onclick="clearSolicitacaoForm()">Limpar</button>
+            <button type="submit" id="btn-submit" class="btn btn-primary" disabled>Gravar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- ── TAB: HISTÓRICO DE SAÍDAS ──────────────────────────────────────── -->
+    <div id="relatorios" class="tab-content" role="tabpanel">
+      <div class="section-title">
+        <h2>Histórico de Solicitações e Consumo</h2>
+        <button class="btn btn-primary" style="padding:7px 14px; font-size:13px;" onclick="printSaidas()">Imprimir Histórico (PDF)</button>
+      </div>
+
+      <div class="filter-bar">
+        <div class="form-group">
+          <label for="filter-empenho">Empenho</label>
+          <select id="filter-empenho" class="form-control" onchange="applyFilters()">
+            <option value="">Todos</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="filter-regiao">Região</label>
+          <select id="filter-regiao" class="form-control" onchange="applyFilters()">
+            <option value="">Todas</option>
+            <option value="Costa Sul">Costa Sul</option>
+            <option value="Centro-Costa Norte">Centro-Costa Norte</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="filter-status">Status</label>
+          <select id="filter-status" class="form-control" onchange="applyFilters()">
+            <option value="">Todos</option>
+            <option value="Solicitado">Solicitado</option>
+            <option value="Confirmado">Confirmado</option>
+            <option value="Realizado">Realizado</option>
+            <option value="Cancelado">Cancelado</option>
+          </select>
+        </div>
+        <div class="form-group" style="flex:2;">
+          <label for="search-evento">Pesquisa Dinâmica</label>
+          <input type="text" id="search-evento" class="form-control" placeholder="Buscar por evento, local, responsável, OS...">
+        </div>
+        <button class="btn btn-secondary" style="padding:7px 12px; height:38px;" id="btn-clear-filters" onclick="clearFilters()" style="display:none;">Limpar</button>
+      </div>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 120px;">OS / Empenho</th>
+              <th>Datas do Evento</th>
+              <th>Evento</th>
+              <th>Item</th>
+              <th>Região</th>
+              <th>Qtd</th>
+              <th>Valor Total</th>
+              <th>Local</th>
+              <th>Responsável</th>
+              <th>Status</th>
+              <th class="btn-hide-print">Ações</th>
+            </tr>
+          </thead>
+          <tbody id="solicitacoes-table-body">
+            <tr><td colspan="12" style="text-align:center; padding:30px; color:var(--text-muted);">Carregando...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── TAB: CADASTRAR EMPENHO ────────────────────────────────────────── -->
+    <div id="abastecer" class="tab-content" role="tabpanel">
+      <div class="card-form">
+        <div class="section-title" style="margin-bottom:20px;">
+          <h2>Cadastrar Novo Contrato / Empenho</h2>
+        </div>
+
+        <form id="form-empenho" onsubmit="handleEmpenhoSubmit(event)">
+          <input type="hidden" id="edit-empenho-id-original" value="">
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="new-empenho-id">Número do Empenho</label>
+              <input type="text" id="new-empenho-id" class="form-control" placeholder="Ex: 004205/2026" required>
+            </div>
+            <div class="form-group">
+              <label for="new-empenho-tipo">Tipo</label>
+              <select id="new-empenho-tipo" class="form-control" required>
+                <option value="Global" selected>Global</option>
+                <option value="Ordinário">Ordinário</option>
+                <option value="Estimativo">Estimativo</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="new-empenho-emissao">Data de Emissão</label>
+              <input type="date" id="new-empenho-emissao" class="form-control" required>
+            </div>
+            <div class="form-group">
+              <label for="new-empenho-vencimento">Data de Vencimento</label>
+              <input type="date" id="new-empenho-vencimento" class="form-control" required>
+            </div>
+          </div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="new-empenho-processo">Nº do Processo</label>
+              <input type="text" id="new-empenho-processo" class="form-control" placeholder="Ex: 11738" required>
+            </div>
+            <div class="form-group">
+              <label for="new-empenho-licitacao">Modalidade Licitatória</label>
+              <input type="text" id="new-empenho-licitacao" class="form-control" placeholder="Ex: Pregão nº 23/2025" required>
+            </div>
+            <div class="form-group">
+              <label for="new-empenho-fornecedor">Razão Social / Credor</label>
+              <input type="text" id="new-empenho-fornecedor" class="form-control"
+                     list="fornecedores-datalist" placeholder="Ex: EGM EVENTOS LTDA"
+                     oninput="onFornecedorInputEmpenho(this.value)" required>
+              <datalist id="fornecedores-datalist"></datalist>
+            </div>
+            <div class="form-group">
+              <label for="new-empenho-cnpj">CNPJ</label>
+              <input type="text" id="new-empenho-cnpj" class="form-control" placeholder="Ex: 11.412.274/0001-04" required>
+            </div>
+          </div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="new-empenho-dotacao">Dotação Orçamentária</label>
+              <input type="text" id="new-empenho-dotacao" class="form-control" placeholder="Ex: 23.695.0001" required>
+            </div>
+            <div class="form-group">
+              <label for="new-empenho-valor">Valor Total (R$)</label>
+              <input type="number" id="new-empenho-valor" class="form-control" min="0.01" step="0.01" placeholder="Ex: 3009550.00" required>
+            </div>
+            <div class="form-group" style="grid-column:3/-1;">
+              <label for="new-empenho-pdf">Anexar Nota de Empenho PDF (Opcional)</label>
+              <input type="file" id="new-empenho-pdf" class="form-control" accept="application/pdf">
+            </div>
+          </div>
+
+          <div class="section-title" style="margin-top:28px; margin-bottom:12px;">
+            <h3 style="font-size:16px;">Itens e Cotas do Contrato</h3>
+          </div>
+
+          <div style="background:#f8fafc; padding:16px; border-radius:var(--radius-sm); border:1px solid var(--border-color); margin-bottom:14px;">
+            <div class="form-grid">
+              <div class="form-group" style="flex:.4;">
+                <label for="item-lote">Lote</label>
+                <input type="number" id="item-lote" class="form-control" placeholder="60">
+              </div>
+              <div class="form-group" style="flex:.4;">
+                <label for="item-index">Item nº</label>
+                <input type="number" id="item-index" class="form-control" placeholder="20">
+              </div>
+              <div class="form-group">
+                <label for="item-codigo">Código</label>
+                <input type="text" id="item-codigo" class="form-control" placeholder="72200">
+              </div>
+              <div class="form-group" style="flex:2;">
+                <label for="item-descricao">Descrição do Serviço</label>
+                <input type="text" id="item-descricao" class="form-control" placeholder="Ex: Som de palestra para atividades eventuais">
+              </div>
+            </div>
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="item-regiao">Região</label>
+                <select id="item-regiao" class="form-control">
+                  <option value="Costa Sul" selected>Costa Sul</option>
+                  <option value="Centro-Costa Norte">Centro-Costa Norte</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="item-unidade">Unidade</label>
+                <input type="text" id="item-unidade" class="form-control" value="UND/DIA">
+              </div>
+              <div class="form-group">
+                <label for="item-qty">Qtde Inicial</label>
+                <input type="number" id="item-qty" class="form-control" min="1" placeholder="Ex: 65">
+              </div>
+              <div class="form-group">
+                <label for="item-valor-un">Valor Unitário (R$)</label>
+                <input type="number" id="item-valor-un" class="form-control" min="0.01" step="0.01" placeholder="Ex: 2250.00">
+              </div>
+            </div>
+            <div style="display:flex; justify-content:flex-end; margin-top:10px;">
+              <button type="button" id="btn-inserir-item" class="btn btn-secondary" onclick="adicionarItemNaListaTemporaria()">Inserir Item no Contrato</button>
+            </div>
+          </div>
+
+          <div class="added-items-list">
+            <h4 style="font-size:13px; font-weight:700; margin-bottom:8px; color:var(--primary-color);">Itens adicionados neste empenho:</h4>
+            <div id="temp-items-container">
+              <div style="color:var(--text-muted); font-size:13px; padding:10px; text-align:center; background:#f8fafc; border-radius:var(--radius-sm);">Nenhum item adicionado. É necessário ao menos um.</div>
+            </div>
+          </div>
+
+          <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px; border-top:1px solid var(--border-color); padding-top:16px;">
+            <button type="button" id="btn-cancel-edit-empenho" class="btn btn-secondary" style="display:none;" onclick="cancelarEdicaoEmpenho()">Cancelar Edição</button>
+            <button type="button" class="btn btn-secondary" onclick="limparFormEmpenho()">Limpar</button>
+            <button type="submit" id="btn-gravar-empenho" class="btn btn-primary" disabled>Gravar Empenho</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- ── TAB: ADMINISTRAÇÃO ─────────────────────────────────────────────── -->
+    <div id="admin" class="tab-content" role="tabpanel">
+      <div class="admin-tabs">
+        <button class="admin-tab-btn active" onclick="switchAdminTab(event, 'admin-usuarios')">Gerenciar Usuários</button>
+        <button class="admin-tab-btn" onclick="switchAdminTab(event, 'admin-logs')">Log de Atividades</button>
+      </div>
+
+      <!-- Sub-tab: Usuários -->
+      <div id="admin-usuarios" class="admin-tab-content active">
+        <div class="section-title" style="margin-bottom:16px;">
+          <h2>Gerenciar Usuários</h2>
+          <button class="btn btn-primary" style="padding:8px 16px; font-size:13px;" onclick="abrirModalNovoUsuario()">+ Novo Usuário</button>
+        </div>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Login</th>
+                <th>Nome</th>
+                <th>Perfil</th>
+                <th>Criado Em</th>
+                <th>Último Acesso</th>
+                <th>Situação</th>
+                <th>1º Acesso</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="admin-usuarios-body">
+              <tr><td colspan="8" style="text-align:center; padding:30px; color:var(--text-muted);">Clique na aba para carregar.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Sub-tab: Logs -->
+      <div id="admin-logs" class="admin-tab-content">
+        <div class="section-title" style="margin-bottom:16px;">
+          <h2>Log de Atividades</h2>
+          <button class="btn btn-secondary" style="padding:8px 16px; font-size:13px;" onclick="carregarLogs()">Atualizar</button>
+        </div>
+        <div class="filter-bar" style="margin-bottom:16px;">
+          <div class="form-group" style="flex:2;">
+            <label for="log-search">Pesquisar</label>
+            <input type="text" id="log-search" class="form-control" placeholder="Buscar por usuário, ação, detalhes..." oninput="filtrarLogs()">
+          </div>
+          <div class="form-group">
+            <label for="log-filter-acao">Ação</label>
+            <select id="log-filter-acao" class="form-control" onchange="filtrarLogs()">
+              <option value="">Todas</option>
+              <option value="LOGIN">Login</option>
+              <option value="LOGOUT">Logout</option>
+              <option value="NOVA_SOLICITACAO">Nova Solicitação</option>
+              <option value="EDITAR_SOLICITACAO">Editar Solicitação</option>
+              <option value="EXCLUIR_SOLICITACAO">Excluir Solicitação</option>
+              <option value="STATUS">Alterar Status</option>
+              <option value="NOVO_EMPENHO">Novo Empenho</option>
+              <option value="CRIAR_USUARIO">Criar Usuário</option>
+              <option value="RESET_SENHA">Resetar Senha</option>
+              <option value="TROCA_SENHA">Troca de Senha</option>
+              <option value="ALTERAR_USUARIO">Alterar Usuário</option>
+            </select>
+          </div>
+        </div>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr><th>Data/Hora</th><th>Login</th><th>Nome</th><th>Ação</th><th>Detalhes</th></tr>
+            </thead>
+            <tbody id="admin-logs-body">
+              <tr><td colspan="5" style="text-align:center; padding:30px; color:var(--text-muted);">Clique em "Atualizar" para carregar.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /container -->
+
+  <script>
+  /* ═══════════════════════════════════════════════════════════════════════
+     STATE
+  ═══════════════════════════════════════════════════════════════════════ */
+  let authToken    = sessionStorage.getItem('setur_token') || null;
+  let currentUser  = null;
+  try { currentUser = JSON.parse(sessionStorage.getItem('setur_user') || 'null'); } catch(e) {}
+
+  let appData        = { empenhos: [], itens: [], solicitacoes: [] };
+  let selectedItemObj = null;
+  let tempItemsList   = [];
+  let allLogs         = [];
+  let confirmResolve  = null;
+  let isForcedPasswordChange = false;
+  let lastEventMatch  = null;
+  let editingItemIndex = null;
+
+  /* ═══════════════════════════════════════════════════════════════════════
+     STARTUP
+  ═══════════════════════════════════════════════════════════════════════ */
+  window.onload = function() {
+    // Fix dynamic search: event listener instead of inline attribute
+    document.getElementById('search-evento').addEventListener('input', applyFilters);
+    document.getElementById('log-search').addEventListener('input', filtrarLogs);
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', e => {
+      if (e.key !== 'Escape') return;
+      closeDetailModal(null);
+      fecharModalSenha();
+      fecharModalNovoUsuario();
+      resolveConfirm(false);
+    });
+
+    window.addEventListener('resize', sendHeightToParent);
+    setInterval(sendHeightToParent, 600);
+
+    // Initialize Flatpickr for multi-dates
+    window.fpDatasEvento = flatpickr("#datasEvento", {
+      mode: "multiple",
+      dateFormat: "d/m/Y",
+      locale: "pt",
+      conjunction: ", ",
+      onChange: function(selectedDates, dateStr, instance) {
+        validateForm();
+      }
+    });
+
+    // Bind form validation triggers programmatically
+    const requiredInputs = ['numeroSolicitacao', 'numeroEmpenho', 'codigoItem', 'nomeEvento', 'qtyConsumida', 'datasEvento'];
+    requiredInputs.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.addEventListener('input', validateForm);
+        el.addEventListener('change', validateForm);
+      }
+    });
+
+    checkSession();
+  };
+
+  function sendHeightToParent() {
+    try {
+      const height = document.body.scrollHeight || document.documentElement.scrollHeight;
+      window.parent.postMessage({ type: 'setur_resize', height: height }, '*');
+    } catch(e) {}
+  }
+
+  function checkSession() {
+    if (authToken && currentUser) {
+      initApp();
+    } else {
+      showLoginScreen();
+    }
+    document.body.style.visibility = 'visible';
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════
+     LOGIN / LOGOUT
+  ═══════════════════════════════════════════════════════════════════════ */
+  function showLoginScreen() {
+    document.getElementById('login-overlay').classList.add('visible');
+    document.getElementById('header-user-info').style.display = 'none';
+  }
+
+  function hideLoginScreen() {
+    document.getElementById('login-overlay').classList.remove('visible');
+  }
+
+  function handleLogin(event) {
+    event.preventDefault();
+    const login = document.getElementById('login-input').value.trim();
+    const senha = document.getElementById('senha-input').value;
+    if (!login || !senha) { showLoginError('Preencha todos os campos.'); return; }
+
+    const btnEntrar = document.getElementById('btn-entrar');
+    btnEntrar.disabled = true;
+    document.getElementById('login-loading').style.display = 'block';
+    document.getElementById('login-error').style.display   = 'none';
+
+    if (typeof google !== 'undefined' && google.script && google.script.run) {
+      google.script.run
+        .withSuccessHandler(onLoginSuccess)
+        .withFailureHandler(onLoginFailed)
+        .autenticar(login, senha);
+    } else {
+      // Modo de desenvolvimento local (mock)
+      setTimeout(() => {
+        if (login === 'admin' && senha === 'setur@2026') {
+          onLoginSuccess({ success: true, token: 'mock-' + Date.now(), nome: 'Administrador', perfil: 'admin', primeiroAcesso: false });
+        } else if (login === 'usuario' && senha === 'setur@2026') {
+          onLoginSuccess({ success: true, token: 'mock-u-' + Date.now(), nome: 'Usuário Teste', perfil: 'usuario', primeiroAcesso: true });
+        } else {
+          onLoginSuccess({ success: false, error: 'Usuário ou senha incorretos.' });
+        }
+      }, 800);
+    }
+  }
+
+  function onLoginSuccess(result) {
+    document.getElementById('btn-entrar').disabled = false;
+    document.getElementById('login-loading').style.display = 'none';
+    if (!result.success) { showLoginError(result.error || 'Erro ao autenticar.'); return; }
+
+    authToken   = result.token;
+    currentUser = { nome: result.nome, perfil: result.perfil };
+    sessionStorage.setItem('setur_token', authToken);
+    sessionStorage.setItem('setur_user', JSON.stringify(currentUser));
+
+    if (result.primeiroAcesso) {
+      hideLoginScreen();
+      openTrocarSenhaModal(true);
+      return;
+    }
+    hideLoginScreen();
+    initApp();
+  }
+
+  function onLoginFailed() {
+    document.getElementById('btn-entrar').disabled = false;
+    document.getElementById('login-loading').style.display = 'none';
+    showLoginError('Falha de comunicação. Verifique sua conexão e tente novamente.');
+  }
+
+  function showLoginError(msg) {
+    const el = document.getElementById('login-error');
+    el.textContent = msg;
+    el.style.display = 'block';
+  }
+
+  async function handleLogout() {
+    const ok = await showConfirm('Encerrar Sessão', 'Deseja sair do sistema?', 'Sair', false);
+    if (!ok) return;
+    if (typeof google !== 'undefined' && google.script && google.script.run) {
+      google.script.run.logout(authToken);
+    }
+    authToken = null; currentUser = null;
+    sessionStorage.removeItem('setur_token');
+    sessionStorage.removeItem('setur_user');
+    appData = { empenhos: [], itens: [], solicitacoes: [] };
+    document.getElementById('tab-btn-admin').style.display = 'none';
+    showLoginScreen();
+    document.getElementById('form-login').reset();
+    document.getElementById('login-error').style.display = 'none';
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════
+     PASSWORD CHANGE
+  ═══════════════════════════════════════════════════════════════════════ */
+  function openTrocarSenhaModal(forced) {
+    isForcedPasswordChange = forced;
+    const modal    = document.getElementById('modal-trocar-senha');
+    const titulo   = document.getElementById('modal-trocar-senha-titulo');
+    const msg      = document.getElementById('modal-trocar-senha-msg');
+    const cancelBtn = document.getElementById('btn-cancelar-trocar-senha');
+    const divAtual = document.getElementById('div-senha-atual');
+
+    if (forced) {
+      titulo.textContent   = 'Defina Sua Senha Pessoal';
+      msg.textContent      = 'Este é seu primeiro acesso. Por segurança, crie uma senha pessoal antes de continuar. A senha deve ter ao menos 8 caracteres.';
+      cancelBtn.style.display = 'none';
+      divAtual.style.display  = 'none';
+    } else {
+      titulo.textContent   = 'Alterar Senha';
+      msg.textContent      = 'Informe sua senha atual e escolha uma nova.';
+      cancelBtn.style.display = 'inline-flex';
+      divAtual.style.display  = 'block';
+    }
+
+    document.getElementById('senha-atual-input').value      = '';
+    document.getElementById('nova-senha-input').value       = '';
+    document.getElementById('confirmar-senha-input').value  = '';
+    document.getElementById('trocar-senha-error').style.display = 'none';
+    document.getElementById('password-strength-fill').style.width = '0%';
+    document.getElementById('password-strength-text').textContent = '';
+    modal.classList.add('open');
+  }
+
+  function fecharModalSenha() {
+    if (isForcedPasswordChange) return;
+    document.getElementById('modal-trocar-senha').classList.remove('open');
+  }
+
+  function toggleSenha(inputId, btn) {
+    const input = document.getElementById(inputId);
+    const isHidden = input.type === 'password';
+    input.type = isHidden ? 'text' : 'password';
+    btn.innerHTML = isHidden
+      ? `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>`
+      : `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`;
+    btn.style.color = isHidden ? 'var(--primary)' : 'var(--text-muted)';
+  }
+
+  function checkPasswordStrength(pass) {
+
+    const fill = document.getElementById('password-strength-fill');
+    const text = document.getElementById('password-strength-text');
+    let score = 0;
+    if (pass.length >= 8)  score++;
+    if (pass.length >= 12) score++;
+    if (/[A-Z]/.test(pass)) score++;
+    if (/[0-9]/.test(pass)) score++;
+    if (/[^A-Za-z0-9]/.test(pass)) score++;
+    const pct = (score / 5) * 100;
+    fill.style.width = pct + '%';
+    if (score <= 1)      { fill.style.backgroundColor = '#dc2626'; text.textContent = 'Muito fraca'; text.style.color = '#dc2626'; }
+    else if (score <= 2) { fill.style.backgroundColor = '#d97706'; text.textContent = 'Fraca'; text.style.color = '#d97706'; }
+    else if (score <= 3) { fill.style.backgroundColor = '#ca8a04'; text.textContent = 'Razoável'; text.style.color = '#ca8a04'; }
+    else if (score <= 4) { fill.style.backgroundColor = '#16a34a'; text.textContent = 'Boa'; text.style.color = '#16a34a'; }
+    else                 { fill.style.backgroundColor = '#059669'; text.textContent = 'Forte'; text.style.color = '#059669'; }
+  }
+
+  function executarTrocaSenha() {
+    const senhaAtual       = document.getElementById('senha-atual-input').value;
+    const novaSenha        = document.getElementById('nova-senha-input').value;
+    const confirmarSenha   = document.getElementById('confirmar-senha-input').value;
+    const errEl            = document.getElementById('trocar-senha-error');
+
+    if (!isForcedPasswordChange && !senhaAtual) { errEl.textContent = 'Informe a senha atual.'; errEl.style.display = 'block'; return; }
+    if (novaSenha.length < 8) { errEl.textContent = 'A nova senha deve ter ao menos 8 caracteres.'; errEl.style.display = 'block'; return; }
+    if (novaSenha !== confirmarSenha) { errEl.textContent = 'As senhas não conferem.'; errEl.style.display = 'block'; return; }
+    errEl.style.display = 'none';
+
+    if (typeof google !== 'undefined' && google.script && google.script.run) {
+      google.script.run
+        .withSuccessHandler(onSenhaTrocada)
+        .withFailureHandler(() => { errEl.textContent = 'Falha de comunicação.'; errEl.style.display = 'block'; })
+        .trocarSenha(authToken, isForcedPasswordChange ? null : senhaAtual, novaSenha);
+    } else {
+      setTimeout(() => onSenhaTrocada({ success: true }), 500);
+    }
+  }
+
+  function onSenhaTrocada(result) {
+    if (!result.success) {
+      const errEl = document.getElementById('trocar-senha-error');
+      errEl.textContent = result.error || 'Erro ao alterar a senha.';
+      errEl.style.display = 'block';
+      return;
+    }
+    document.getElementById('modal-trocar-senha').classList.remove('open');
+    showToast('Senha alterada com sucesso.', 'success');
+    if (isForcedPasswordChange) {
+      isForcedPasswordChange = false;
+      initApp();
+    }
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════
+     APP INIT & DATA LOADING
+  ═══════════════════════════════════════════════════════════════════════ */
+  function initApp() {
+    document.getElementById('header-user-info').style.display = 'flex';
+    document.getElementById('user-name-display').textContent = currentUser.nome;
+    document.getElementById('user-role-display').textContent = currentUser.perfil === 'admin' ? 'Administrador' : 'Usuário';
+    document.getElementById('user-avatar').textContent = (currentUser.nome || 'U').charAt(0).toUpperCase();
+
+    if (currentUser.perfil === 'admin') {
+      document.getElementById('tab-btn-admin').style.display = 'inline-flex';
+    } else {
+      document.getElementById('tab-btn-admin').style.display = 'none';
+    }
+
+    switchTab('dashboard');
+
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('dataSolicitacao').value    = today;
+    document.getElementById('new-empenho-emissao').value    = today;
+    document.getElementById('new-empenho-vencimento').value = today;
+
+    loadData();
+  }
+
+  function loadData() {
+    showLoading('Carregando dados...');
+    if (typeof google !== 'undefined' && google.script && google.script.run) {
+      google.script.run
+        .withSuccessHandler(onDataLoaded)
+        .withFailureHandler(onLoadFailed)
+        .obterDadosCompletos();
+    } else {
+      setTimeout(() => onDataLoaded(getMockData()), 700);
+    }
+  }
+
+  function onDataLoaded(data) {
+    appData = data;
+    hideLoading();
+    renderDashboard();
+    renderStockLevels();
+    populateFormDropdowns();
+    populateFilterDropdowns();
+    populateEventosDatalist();
+    populateFornecedoresDatalist();
+    renderSolicitacoesTable(appData.solicitacoes);
+    showToast('Dados atualizados.', 'success');
+  }
+
+  function onLoadFailed(error) {
+    hideLoading();
+    showToast('Erro ao carregar dados: ' + (error.message || error), 'error');
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════
+     TAB SWITCHING
+  ═══════════════════════════════════════════════════════════════════════ */
+  function switchTab(tabId) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    const btn = document.getElementById('tab-btn-' + tabId);
+    if (btn) btn.classList.add('active');
+    document.getElementById(tabId).classList.add('active');
+    if (tabId === 'admin') carregarUsuarios();
+    setTimeout(sendHeightToParent, 150);
+  }
+
+  function switchAdminTab(event, tabId) {
+    document.querySelectorAll('.admin-tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.admin-tab-content').forEach(c => c.classList.remove('active'));
+    event.currentTarget.classList.add('active');
+    document.getElementById(tabId).classList.add('active');
+    if (tabId === 'admin-logs') carregarLogs();
+    else if (tabId === 'admin-usuarios') carregarUsuarios();
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════
+     DASHBOARD
+  ═══════════════════════════════════════════════════════════════════════ */
+  function renderDashboard() {
+    let totalEmpenhado = 0, totalConsumido = 0;
+    appData.empenhos.forEach(e => {
+      totalEmpenhado += Number(e['Valor Empenhado']) || 0;
+      totalConsumido += Number(e.valorConsumido)     || 0;
+    });
+    const saldo = Math.max(0, totalEmpenhado - totalConsumido);
+    const pct   = totalEmpenhado > 0 ? (totalConsumido / totalEmpenhado) * 100 : 0;
+    const accent = pct >= 80 ? 'accent-error' : pct >= 50 ? 'accent-warning' : 'accent-ok';
+
+    document.getElementById('dashboard-cards').innerHTML = `
+      <div class="summary-card"><div class="summary-card-title">Orçamento Reservado</div><div class="summary-card-value">${formatCurrency(totalEmpenhado)}</div></div>
+      <div class="summary-card"><div class="summary-card-title">Valor Consumido</div><div class="summary-card-value">${formatCurrency(totalConsumido)}</div></div>
+      <div class="summary-card ${accent}"><div class="summary-card-title">Saldo Financeiro</div><div class="summary-card-value">${formatCurrency(saldo)}</div></div>
+      <div class="summary-card"><div class="summary-card-title">Contratos / Empenhos</div><div class="summary-card-value">${appData.empenhos.length}</div></div>
+    `;
+  }
+
+  function onFornecedorDashChange() {
+    const fornecedor = document.getElementById('dashboard-fornecedor-filter').value;
+    const cnpjInfo   = document.getElementById('fornecedor-cnpj-info');
+    if (fornecedor) {
+      const emp = appData.empenhos.find(e => e['Fornecedor'] === fornecedor);
+      if (emp && emp['CNPJ']) {
+        document.getElementById('fornecedor-cnpj-value').textContent = emp['CNPJ'];
+        cnpjInfo.style.display = 'flex';
+      }
+    } else {
+      cnpjInfo.style.display = 'none';
+    }
+    renderStockLevels();
+  }
+
+  function renderStockLevels() {
+    const selEmp  = document.getElementById('dashboard-empenho-filter').value;
+    const selForn = document.getElementById('dashboard-fornecedor-filter').value;
+    const container = document.getElementById('stock-groups-container');
+    container.innerHTML = '';
+
+    let lista = appData.empenhos;
+    if (selEmp !== 'todos') lista = lista.filter(e => e['Nº Empenho'] === selEmp);
+    if (selForn)             lista = lista.filter(e => e['Fornecedor'] === selForn);
+
+    if (lista.length === 0) {
+      container.innerHTML = '<div style="text-align:center; color:var(--text-muted); padding:40px; background:white; border-radius:var(--radius-md);">Nenhum empenho para o filtro selecionado.</div>';
+      return;
+    }
+
+    lista.forEach(emp => {
+      const empNo       = emp['Nº Empenho'];
+      const itensEmp    = appData.itens.filter(it => it['Nº Empenho'] === empNo);
+      const fileLink    = emp['Link PDF']
+        ? `<a href="${emp['Link PDF']}" target="_blank" onclick="event.stopPropagation()" style="font-size:11.5px; color:rgba(255,255,255,.8); font-weight:700; border:1px solid rgba(255,255,255,.35); padding:2px 8px; border-radius:4px; text-decoration:none; margin-left:8px;">[PDF]</a>` : '';
+      const editBtn     = `<button class="btn" style="font-size:11px; padding:2px 8px; background:var(--accent-color); color:var(--primary-dark); font-weight:700; margin-left:8px;" onclick="event.stopPropagation(); startEditEmpenho('${escapeAttr(empNo)}')">Editar</button>`;
+
+      const section = document.createElement('div');
+      section.style.marginBottom = '28px';
+      section.innerHTML = `
+        <div style="background:var(--primary-color); color:white; padding:12px 20px; border-radius:8px 8px 0 0; display:flex; justify-content:space-between; align-items:center; cursor:pointer;"
+             onclick="toggleGroup(this)">
+          <span style="font-family:'Outfit'; font-weight:800; font-size:14.5px;">Empenho Nº ${empNo} — ${emp['Fornecedor'] || ''} ${fileLink} ${editBtn}</span>
+          <div style="display:flex; align-items:center; gap:12px;">
+            <span style="font-size:12.5px; font-weight:700; background:rgba(255,255,255,.15); padding:3px 12px; border-radius:15px;">Saldo: ${formatCurrency(emp.saldo)} / ${formatCurrency(emp['Valor Empenhado'])}</span>
+            <span class="toggle-arrow" style="font-size:18px;">▾</span>
+          </div>
+        </div>
+      `;
+
+      const grid = document.createElement('div');
+      grid.className = 'stock-grid';
+      grid.style.cssText = 'border:1px solid var(--border-color); border-top:none; padding:16px; border-radius:0 0 8px 8px; background:#f8fafc;';
+
+      if (itensEmp.length === 0) {
+        grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:var(--text-muted); padding:20px;">Nenhum item cadastrado neste empenho.</div>';
+      } else {
+        itensEmp.forEach(item => {
+          const pct   = item.pctUtilizado * 100;
+          const avail = Math.max(0, 100 - pct);
+          let barColor = 'var(--status-ok)', badgeClass = 'status-badge-ok', statusTxt = 'Em Estoque';
+          if (item.status === 'Esgotado') { barColor = 'var(--status-error)'; badgeClass = 'status-badge-error'; statusTxt = 'Sem Saldo'; }
+          else if (item.status === 'Baixo') { barColor = 'var(--status-warning)'; badgeClass = 'status-badge-warning'; statusTxt = 'Saldo Baixo'; }
+
+          const card = document.createElement('div');
+          card.className = 'stock-card';
+          card.onclick   = () => showItemDetails(item);
+          card.innerHTML = `
+            <div class="stock-card-header">
+              <span class="item-code">${item['Código']}</span>
+              <span class="stock-status-badge ${badgeClass}">${statusTxt}</span>
+            </div>
+            <div class="item-desc">${item['Descrição']}</div>
+            <div class="item-region">${item['Região']}</div>
+            <div style="margin-top:auto;">
+              <div class="stock-bar-container"><div class="stock-bar" style="width:${avail}%; background-color:${barColor};"></div></div>
+              <div class="stock-numbers">
+                <span class="stock-label">Disponível:</span>
+                <span><strong>${item.qtyDisponivel}</strong> de ${item['Qtde Autorizada']} ${item['Unidade']}</span>
+              </div>
+              <div class="stock-card-footer">
+                <span>Un: ${formatCurrency(item['Valor Unitário'])}</span>
+                <span>Restante: ${formatCurrency(item.qtyDisponivel * item['Valor Unitário'])}</span>
+              </div>
+            </div>
+          `;
+          grid.appendChild(card);
+        });
+      }
+
+      section.appendChild(grid);
+      container.appendChild(section);
+    });
+  }
+
+  function toggleGroup(header) {
+    const grid  = header.nextElementSibling;
+    const arrow = header.querySelector('.toggle-arrow');
+    const hide  = grid.style.display !== 'none' && grid.style.display !== '';
+    // Correct: if display is block/grid show it, otherwise default
+    const isVisible = !grid.style.display || grid.style.display === 'grid' || grid.style.display === 'block';
+    grid.style.display  = isVisible ? 'none' : 'grid';
+    arrow.textContent   = isVisible ? '▸' : '▾';
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════
+     DROPDOWNS / DATALISTS
+  ═══════════════════════════════════════════════════════════════════════ */
+  function populateFormDropdowns() {
+    const sel = document.getElementById('numeroEmpenho');
+    sel.innerHTML = '<option value="">Selecione...</option>';
+    appData.empenhos.forEach(emp => {
+      const o = new Option(`Empenho ${emp['Nº Empenho']} — ${emp['Fornecedor']}`, emp['Nº Empenho']);
+      sel.appendChild(o);
+    });
+  }
+
+  function populateFilterDropdowns() {
+    const fEmp  = document.getElementById('filter-empenho');
+    const dEmp  = document.getElementById('dashboard-empenho-filter');
+    const dForn = document.getElementById('dashboard-fornecedor-filter');
+    fEmp.innerHTML  = '<option value="">Todos</option>';
+    dEmp.innerHTML  = '<option value="todos">Todos os Empenhos</option>';
+    dForn.innerHTML = '<option value="">Todos</option>';
+
+    const fornSet = new Set();
+    appData.empenhos.forEach(emp => {
+      fEmp.appendChild(new Option(emp['Nº Empenho'], emp['Nº Empenho']));
+      dEmp.appendChild(new Option(`${emp['Nº Empenho']}`, emp['Nº Empenho']));
+      if (emp['Fornecedor'] && !fornSet.has(emp['Fornecedor'])) {
+        fornSet.add(emp['Fornecedor']);
+        dForn.appendChild(new Option(emp['Fornecedor'], emp['Fornecedor']));
+      }
+    });
+  }
+
+  function validateForm() {
+    const btn = document.getElementById('btn-submit');
+    const numSol = document.getElementById('numeroSolicitacao').value.trim();
+    const numEmp = document.getElementById('numeroEmpenho').value;
+    const codItem = document.getElementById('codigoItem').value;
+    const nomeEv = document.getElementById('nomeEvento').value.trim();
+    const qtyInput = document.getElementById('qtyConsumida');
+    const qty = parseInt(qtyInput.value, 10);
+    const datas = document.getElementById('datasEvento').value.trim();
+    const msgEl = document.getElementById('qty-validation-msg');
+
+    // 1. Basic empty checks
+    if (!numSol || !numEmp || !codItem || !nomeEv || isNaN(qty) || qty <= 0 || !datas) {
+      btn.disabled = true;
+      if (isNaN(qty) || qty <= 0) {
+        msgEl.textContent = qtyInput.value ? 'Digite uma quantidade válida.' : '';
+        msgEl.style.color = 'var(--text-muted)';
+      }
+      return;
+    }
+
+    // 2. Quantity balance check
+    if (!selectedItemObj) {
+      btn.disabled = true;
+      msgEl.textContent = '';
+      return;
+    }
+
+    const editId = document.getElementById('edit-solicitacao-id').value;
+    let qtyOrig = 0;
+    if (editId) {
+      const sol = appData.solicitacoes.find(s => s['Nº Solicitação'] == editId);
+      if (sol && sol['Nº Empenho'] === selectedItemObj['Nº Empenho'] && sol['Código Item'] == selectedItemObj['Código']) {
+        qtyOrig = Number(sol['Qtde Consumida']) || 0;
+      }
+    }
+    const maxDisp = selectedItemObj.qtyDisponivel + qtyOrig;
+    if (qty > maxDisp) {
+      btn.disabled = true;
+      msgEl.textContent = `Erro: Excede o saldo de ${maxDisp}.`;
+      msgEl.style.color = 'var(--status-error)';
+    } else {
+      btn.disabled = false;
+      msgEl.textContent = `Quantidade ok. Novo saldo disponível: ${maxDisp - qty}.`;
+      msgEl.style.color = 'var(--status-ok)';
+    }
+  }
+
+  function populateEventosDatalist() {
+    const dl = document.getElementById('eventos-datalist');
+    dl.innerHTML = '';
+    const set = new Set(appData.solicitacoes.map(s => (s['Nome do Evento'] || '').trim()).filter(Boolean));
+    set.forEach(v => dl.appendChild(new Option(v)));
+  }
+
+  function populateFornecedoresDatalist() {
+    const dl  = document.getElementById('fornecedores-datalist');
+    dl.innerHTML = '';
+    const set = new Set();
+    appData.empenhos.forEach(e => {
+      if (e['Fornecedor'] && !set.has(e['Fornecedor'])) {
+        set.add(e['Fornecedor']);
+        dl.appendChild(new Option(e['Fornecedor']));
+      }
+    });
+  }
+
+  function onFornecedorInputEmpenho(val) {
+    const emp = appData.empenhos.find(e => e['Fornecedor'] === val.trim());
+    if (emp && emp['CNPJ']) document.getElementById('new-empenho-cnpj').value = emp['CNPJ'];
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════
+     FORM: NOVA SOLICITAÇÃO
+  ═══════════════════════════════════════════════════════════════════════ */
+  function onEmpenhoSelect() {
+    const empNo    = document.getElementById('numeroEmpenho').value;
+    const selItem  = document.getElementById('codigoItem');
+    selItem.innerHTML = '<option value="">Selecione...</option>';
+    selectedItemObj   = null;
+    document.getElementById('item-info-box').style.display = 'none';
+    document.getElementById('qtyConsumida').disabled = true;
+    document.getElementById('qtyConsumida').value    = '';
+    document.getElementById('btn-submit').disabled   = true;
+    document.getElementById('qty-validation-msg').textContent = '';
+    validateForm();
+    if (!empNo) { selItem.disabled = true; return; }
+
+    const itensEmp = appData.itens.filter(it => it['Nº Empenho'] === empNo);
+    if (!itensEmp.length) { selItem.innerHTML = '<option value="">Nenhum item cadastrado</option>'; selItem.disabled = true; return; }
+
+    itensEmp.forEach(item => {
+      let label = `${item['Código']} — ${item['Descrição']} (${item['Região']})`;
+      if (item.qtyDisponivel <= 0) label += ' [ESGOTADO]';
+      else label += ` [Restam ${item.qtyDisponivel}]`;
+      const o   = new Option(label, item['Código']);
+      if (item.qtyDisponivel <= 0) o.disabled = true;
+      selItem.appendChild(o);
+    });
+    selItem.disabled = false;
+  }
+
+  function onItemSelect() {
+    const empNo    = document.getElementById('numeroEmpenho').value;
+    const itemCode = document.getElementById('codigoItem').value;
+    const infoBox  = document.getElementById('item-info-box');
+
+    if (!itemCode || !empNo) {
+      infoBox.style.display = 'none';
+      document.getElementById('qtyConsumida').disabled = true;
+      document.getElementById('btn-submit').disabled   = true;
+      selectedItemObj = null;
+      return;
+    }
+    selectedItemObj = appData.itens.find(it => it['Nº Empenho'] === empNo && it['Código'] == itemCode);
+    if (!selectedItemObj) { infoBox.style.display = 'none'; return; }
+
+    document.getElementById('info-desc').textContent   = selectedItemObj['Descrição'];
+    document.getElementById('info-regiao').textContent = selectedItemObj['Região'];
+    document.getElementById('info-valor-un').textContent = formatCurrency(selectedItemObj['Valor Unitário']);
+
+    const saldoEl = document.getElementById('info-saldo');
+    saldoEl.textContent = `${selectedItemObj.qtyDisponivel} ${selectedItemObj['Unidade']}`;
+    saldoEl.className = 'info-box-value ' +
+      (selectedItemObj.qtyDisponivel <= 0 ? 'highlight-error' : selectedItemObj.pctUtilizado >= 0.8 ? 'highlight-warning' : 'highlight-ok');
+
+    infoBox.style.display = 'block';
+    const qtyInput = document.getElementById('qtyConsumida');
+    qtyInput.disabled = selectedItemObj.qtyDisponivel <= 0;
+    qtyInput.max      = selectedItemObj.qtyDisponivel;
+
+    const editId = document.getElementById('edit-solicitacao-id').value;
+    if (editId) {
+      const sol = appData.solicitacoes.find(s => s['Nº Solicitação'] == editId);
+      if (sol && sol['Nº Empenho'] === empNo && sol['Código Item'] == itemCode) {
+        qtyInput.value = sol['Qtde Consumida'];
+        qtyInput.disabled = false;
+      }
+    }
+    validateForm();
+  }
+
+  function onNomeEventoInput(val) {
+    if (!val || val.trim().length < 3) return;
+    const lower = val.trim().toLowerCase();
+    const matches = appData.solicitacoes.filter(s => (s['Nome do Evento'] || '').trim().toLowerCase() === lower);
+    if (matches.length > 0) {
+      const latest = matches[matches.length - 1];
+      document.getElementById('localEvento').value   = latest['Local do Evento']   || '';
+      document.getElementById('respMontagem').value  = latest['Resp. Montagem']    || '';
+      document.getElementById('contatoResp').value   = latest['Contato Resp.']     || '';
+      if (latest['Horário Início']) document.getElementById('horarioInicio').value = formatTime(latest['Horário Início']);
+      if (latest['Horário Fim'])    document.getElementById('horarioFim').value    = formatTime(latest['Horário Fim']);
+      lastEventMatch = latest;
+      const btnRep = document.getElementById('btn-repetir-ultimo');
+      btnRep.textContent   = `Repetir dados de: "${latest['Nome do Evento']}"`;
+      btnRep.style.display = 'inline-flex';
+    }
+  }
+
+  function checkEventoRepetido(val) {
+    if (!val || document.getElementById('edit-solicitacao-id').value) return;
+    const lower = val.trim().toLowerCase();
+    const match = [...appData.solicitacoes].reverse().find(s => (s['Nome do Evento'] || '').trim().toLowerCase() === lower);
+    if (match) {
+      lastEventMatch = match;
+      const btn = document.getElementById('btn-repetir-ultimo');
+      btn.textContent   = `Repetir dados de: "${match['Nome do Evento']}"`;
+      btn.style.display = 'inline-flex';
+    } else {
+      document.getElementById('btn-repetir-ultimo').style.display = 'none';
+      lastEventMatch = null;
+    }
+  }
+
+  function repetirDadosDoUltimoEvento() {
+    if (!lastEventMatch) return;
+    document.getElementById('localEvento').value   = lastEventMatch['Local do Evento']   || '';
+    document.getElementById('respMontagem').value  = lastEventMatch['Resp. Montagem']    || '';
+    document.getElementById('contatoResp').value   = lastEventMatch['Contato Resp.']     || '';
+    document.getElementById('datasEvento').value   = lastEventMatch['Datas do Evento']   || '';
+    document.getElementById('horarioInicio').value = formatTime(lastEventMatch['Horário Início']);
+    document.getElementById('horarioFim').value    = formatTime(lastEventMatch['Horário Fim']);
+    showToast('Dados do evento repetidos.');
+  }
+
+  function validateQuantity() {
+    const qtyInput = document.getElementById('qtyConsumida');
+    const qty      = parseInt(qtyInput.value, 10);
+    const msgEl    = document.getElementById('qty-validation-msg');
+    const btn      = document.getElementById('btn-submit');
+
+    if (!selectedItemObj) { btn.disabled = true; msgEl.textContent = ''; return; }
+    if (isNaN(qty) || qty <= 0) { btn.disabled = true; msgEl.textContent = 'Digite uma quantidade válida.'; msgEl.style.color = 'var(--text-muted)'; return; }
+
+    const editId = document.getElementById('edit-solicitacao-id').value;
+    let qtyOrig  = 0;
+    if (editId) {
+      const sol = appData.solicitacoes.find(s => s['Nº Solicitação'] == editId);
+      if (sol && sol['Nº Empenho'] === selectedItemObj['Nº Empenho'] && sol['Código Item'] == selectedItemObj['Código']) {
+        qtyOrig = Number(sol['Qtde Consumida']) || 0;
+      }
+    }
+    const maxDisp = selectedItemObj.qtyDisponivel + qtyOrig;
+    if (qty > maxDisp) {
+      btn.disabled = true;
+      msgEl.textContent = `Erro: Excede o saldo de ${maxDisp}.`;
+      msgEl.style.color = 'var(--status-error)';
+    } else {
+      btn.disabled = false;
+      msgEl.textContent = `OK. Restará: ${maxDisp - qty} diária(s).`;
+      msgEl.style.color = 'var(--status-ok)';
+    }
+  }
+
+  function handleFormSubmit(event) {
+    event.preventDefault();
+
+    // Validar campos obrigatórios manualmente para garantir segurança completa
+    const numSol = document.getElementById('numeroSolicitacao').value.trim();
+    const numEmp = document.getElementById('numeroEmpenho').value;
+    const codItem = document.getElementById('codigoItem').value;
+    const nomeEv = document.getElementById('nomeEvento').value.trim();
+    const qty = document.getElementById('qtyConsumida').value;
+    const datas = document.getElementById('datasEvento').value.trim();
+
+    if (!numSol || !numEmp || !codItem || !nomeEv || !qty || !datas) {
+      showToast('Por favor, preencha todos os campos obrigatórios (*)', 'error');
+      // Re-habilita o botão para permitir correção
+      document.getElementById('btn-submit').disabled = false;
+      return;
+    }
+
+    const editId = document.getElementById('edit-solicitacao-id').value;
+    document.getElementById('btn-submit').disabled = true;
+    showLoading(editId ? 'Salvando alterações...' : 'Gravando solicitação...');
+
+    const payload = {
+      numeroSolicitacao: document.getElementById('numeroSolicitacao').value.trim(),
+      numeroEmpenho:     document.getElementById('numeroEmpenho').value,
+      dataSolicitacao:   document.getElementById('dataSolicitacao').value,
+      nomeEvento:        document.getElementById('nomeEvento').value.trim(),
+      datasEvento:       document.getElementById('datasEvento').value.trim(),
+      horarioInicio:     document.getElementById('horarioInicio').value,
+      horarioFim:        document.getElementById('horarioFim').value,
+      codigoItem:        document.getElementById('codigoItem').value,
+      qtyConsumida:      parseInt(document.getElementById('qtyConsumida').value, 10),
+      localEvento:       document.getElementById('localEvento').value.trim(),
+      respMontagem:      document.getElementById('respMontagem').value.trim(),
+      contatoResp:       document.getElementById('contatoResp').value.trim(),
+      status:            document.getElementById('status').value,
+      numeroNotaFiscal:  document.getElementById('numeroNotaFiscal').value.trim(),
+      observacoes:       document.getElementById('observacoes').value.trim(),
+      pdfFile: '', pdfFileName: ''
+    };
+
+    const fileInput = document.getElementById('solicitacao-pdf');
+    if (fileInput.files.length > 0) {
+      const reader = new FileReader();
+      reader.onload = e => {
+        payload.pdfFile     = e.target.result;
+        payload.pdfFileName = `Sol_${payload.numeroSolicitacao.split('/').join('_')}_${Date.now()}.pdf`;
+        executeSaveSolicitacao(editId, payload);
+      };
+      reader.readAsDataURL(fileInput.files[0]);
+    } else {
+      executeSaveSolicitacao(editId, payload);
+    }
+  }
+
+  function executeSaveSolicitacao(editId, payload) {
+    if (typeof google !== 'undefined' && google.script && google.script.run) {
+      const fn = editId ? 'editarSolicitacao' : 'registrarSolicitacao';
+      const args = editId ? [authToken, editId, payload] : [authToken, payload];
+      google.script.run.withSuccessHandler(onSolicitacaoSaved).withFailureHandler(onSolicitacaoFailed)[fn](...args);
+    } else {
+      setTimeout(() => {
+        if (editId) {
+          const idx = appData.solicitacoes.findIndex(s => s['Nº Solicitação'] == editId);
+          if (idx !== -1) appData.solicitacoes[idx] = buildMockSol(payload);
+        } else {
+          appData.solicitacoes.push(buildMockSol(payload));
+        }
+        onSolicitacaoSaved({ success: true });
+      }, 900);
+    }
+  }
+
+  function buildMockSol(p) {
+    return {
+      'Nº Solicitação': p.numeroSolicitacao, 'Nº Empenho': p.numeroEmpenho,
+      'Data Solicitação': p.dataSolicitacao, 'Nome do Evento': p.nomeEvento,
+      'Datas do Evento': p.datasEvento, 'Horário Início': p.horarioInicio,
+      'Horário Fim': p.horarioFim, 'Código Item': p.codigoItem,
+      'Qtde Consumida': p.qtyConsumida, 'Local do Evento': p.localEvento,
+      'Resp. Montagem': p.respMontagem, 'Contato Resp.': p.contatoResp,
+      'Status': p.status, 'Nº Nota Fiscal': p.numeroNotaFiscal, 'Observações': p.observacoes, 'Link PDF': ''
+    };
+  }
+
+  function onSolicitacaoSaved(result) {
+    if (result.success) {
+      showToast('Gravado com sucesso.', 'success');
+      clearSolicitacaoForm();
+      switchTab('dashboard');
+      loadData();
+    } else {
+      hideLoading();
+      showToast('Erro: ' + result.error, 'error');
+      document.getElementById('btn-submit').disabled = false;
+    }
+  }
+
+  function onSolicitacaoFailed(error) {
+    hideLoading();
+    showToast('Falha: ' + (error.message || error), 'error');
+    document.getElementById('btn-submit').disabled = false;
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════
+     DELETE
+  ═══════════════════════════════════════════════════════════════════════ */
+  async function deleteSolicitacao(id) {
+    const ok = await showConfirm('Excluir Solicitação', `Excluir permanentemente a solicitação ${id}? O saldo retornará ao estoque.`, 'Excluir');
+    if (!ok) return;
+    closeDetailModal(null);
+    showLoading('Excluindo...');
+    if (typeof google !== 'undefined' && google.script && google.script.run) {
+      google.script.run.withSuccessHandler(onDeleted).withFailureHandler(err => { hideLoading(); showToast('Erro: ' + err.message, 'error'); })
+        .excluirSolicitacao(authToken, id);
+    } else {
+      setTimeout(() => { appData.solicitacoes = appData.solicitacoes.filter(s => s['Nº Solicitação'] != id); onDeleted({ success: true }); }, 700);
+    }
+  }
+
+  function onDeleted(res) {
+    if (res.success) { showToast('Solicitação excluída.'); loadData(); }
+    else { hideLoading(); showToast('Erro ao excluir: ' + res.error, 'error'); }
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════
+     STATUS RÁPIDO (INLINE)
+  ═══════════════════════════════════════════════════════════════════════ */
+  function atualizarStatusRapido(id, novoStatus) {
+    if (typeof google !== 'undefined' && google.script && google.script.run) {
+      google.script.run
+        .withSuccessHandler(res => {
+          if (res.success) {
+            const sol = appData.solicitacoes.find(s => s['Nº Solicitação'] == id);
+            if (sol) sol['Status'] = novoStatus;
+            showToast(`Status: ${novoStatus}`, 'success');
+          } else {
+            showToast('Erro: ' + res.error, 'error');
+            loadData();
+          }
+        })
+        .withFailureHandler(() => showToast('Falha ao atualizar status.', 'error'))
+        .atualizarStatusSolicitacao(authToken, id, novoStatus);
+    } else {
+      const sol = appData.solicitacoes.find(s => s['Nº Solicitação'] == id);
+      if (sol) { sol['Status'] = novoStatus; showToast(`Status: ${novoStatus}`, 'success'); }
+    }
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════
+     EDIT
+  ═══════════════════════════════════════════════════════════════════════ */
+  function startEditSolicitacao(id) {
+    closeDetailModal(null);
+    const sol = appData.solicitacoes.find(s => s['Nº Solicitação'] == id);
+    if (!sol) return;
+    switchTab('lancamento');
+    document.getElementById('form-solicitacao-title').textContent = `Editar Solicitação ${id}`;
+    document.getElementById('edit-solicitacao-id').value          = id;
+    document.getElementById('btn-cancel-edit').style.display      = 'inline-flex';
+    document.getElementById('numeroSolicitacao').value            = sol['Nº Solicitação'];
+    document.getElementById('numeroSolicitacao').disabled         = true;
+    document.getElementById('numeroEmpenho').value                = sol['Nº Empenho'];
+    onEmpenhoSelect();
+    document.getElementById('codigoItem').value = sol['Código Item'];
+    onItemSelect();
+    document.getElementById('dataSolicitacao').value  = sol['Data Solicitação'];
+    document.getElementById('nomeEvento').value       = sol['Nome do Evento'];
+    // Preenche o Flatpickr com as datas
+    if (window.fpDatasEvento) {
+      window.fpDatasEvento.setDate(sol['Datas do Evento'] || '');
+    } else {
+      document.getElementById('datasEvento').value = sol['Datas do Evento'] || '';
+    }
+
+    document.getElementById('horarioInicio').value    = formatTime(sol['Horário Início']);
+    document.getElementById('horarioFim').value       = formatTime(sol['Horário Fim']);
+    document.getElementById('localEvento').value      = sol['Local do Evento'];
+    document.getElementById('respMontagem').value     = sol['Resp. Montagem'];
+    document.getElementById('contatoResp').value      = sol['Contato Resp.'];
+    document.getElementById('status').value           = sol['Status'];
+    document.getElementById('numeroNotaFiscal').value = sol['Nº Nota Fiscal'] || '';
+    document.getElementById('observacoes').value      = sol['Observações'] || '';
+    const pdfAtual = document.getElementById('solicitacao-pdf-atual');
+    if (sol['Link PDF']) { pdfAtual.innerHTML = `<a href="${sol['Link PDF']}" target="_blank">Ver PDF atual</a>`; pdfAtual.style.display = 'block'; }
+    else pdfAtual.style.display = 'none';
+    document.getElementById('qtyConsumida').value    = sol['Qtde Consumida'];
+    document.getElementById('qtyConsumida').disabled = false;
+    validateQuantity();
+  }
+
+  function cancelarEdicao() { clearSolicitacaoForm(); switchTab('relatorios'); }
+
+  function clearSolicitacaoForm() {
+    document.getElementById('form-solicitacao').reset();
+    document.getElementById('numeroSolicitacao').disabled   = false;
+    document.getElementById('edit-solicitacao-id').value    = '';
+    document.getElementById('btn-cancel-edit').style.display = 'none';
+    document.getElementById('btn-repetir-ultimo').style.display = 'none';
+    document.getElementById('solicitacao-pdf-atual').style.display = 'none';
+    document.getElementById('form-solicitacao-title').textContent = 'Registrar Utilização de Empenho';
+    document.getElementById('numeroEmpenho').value = '';
+    onEmpenhoSelect();
+    document.getElementById('dataSolicitacao').value = new Date().toISOString().split('T')[0];
+    
+    // Limpa Flatpickr
+    if (window.fpDatasEvento) {
+      window.fpDatasEvento.clear();
+    } else {
+      document.getElementById('datasEvento').value = '';
+    }
+    lastEventMatch = null;
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════
+     TABLE RENDERING
+  ═══════════════════════════════════════════════════════════════════════ */
+  const STATUS_COLORS = {
+    'Solicitado': { bg: 'var(--status-warning-bg)', color: 'var(--status-warning)' },
+    'Confirmado': { bg: '#eff6ff', color: '#1d4ed8' },
+    'Realizado':  { bg: 'var(--status-ok-bg)',      color: 'var(--status-ok)' },
+    'Cancelado':  { bg: 'var(--status-error-bg)',   color: 'var(--status-error)' }
+  };
+
+  function renderSolicitacoesTable(list) {
+    const tbody = document.getElementById('solicitacoes-table-body');
+    if (!list.length) {
+      tbody.innerHTML = '<tr><td colspan="12" style="text-align:center; padding:30px; color:var(--text-muted);">Nenhuma solicitação encontrada.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = list.map(sol => {
+      const item    = appData.itens.find(it => it['Nº Empenho'] === sol['Nº Empenho'] && it['Código'] == sol['Código Item']);
+      const unitVal = item ? (item['Valor Unitário'] || 0) : 0;
+      const total   = (Number(sol['Qtde Consumida']) || 0) * unitVal;
+      const regiao  = item ? item['Região'] : '-';
+      const sc      = STATUS_COLORS[sol['Status']] || { bg: '#f1f5f9', color: '#475569' };
+      const idEsc   = escapeAttr(sol['Nº Solicitação']);
+
+      return `<tr>
+        <td class="clickable-td" onclick="showSolicitacaoDetails('${idEsc}')">
+          <strong>${sol['Nº Solicitação']}</strong><br><small style="color:var(--text-muted);">${sol['Nº Empenho']}</small>
+        </td>
+        <td>${formatMultiDates(sol['Datas do Evento'])}</td>
+        <td class="clickable-td" onclick="abrirRelatorioCruzado('Nome do Evento','${escapeAttr(sol['Nome do Evento'])}')"><strong>${sol['Nome do Evento']}</strong></td>
+        <td><strong>${sol['Código Item']}</strong>${item ? `<br><small style="color:var(--text-muted);font-size:11px;">${item['Descrição']}</small>` : ''}</td>
+        <td>${regiao}</td>
+        <td>${sol['Qtde Consumida']}</td>
+        <td><strong>${formatCurrency(total)}</strong></td>
+        <td class="clickable-td" onclick="abrirRelatorioCruzado('Local do Evento','${escapeAttr(sol['Local do Evento'])}')">
+          <small>${sol['Local do Evento']}</small>
+        </td>
+        <td class="clickable-td" onclick="abrirRelatorioCruzado('Resp. Montagem','${escapeAttr(sol['Resp. Montagem'])}')">
+          ${sol['Resp. Montagem']}<br><small style="color:var(--text-muted);">${sol['Contato Resp.']}</small>
+        </td>
+        <td>
+          <select class="status-inline-select" style="background-color:${sc.bg}; color:${sc.color};"
+            onchange="atualizarStatusRapido('${idEsc}', this.value)" onclick="event.stopPropagation()">
+            <option value="Solicitado" ${sol['Status']==='Solicitado'?'selected':''}>Solicitado</option>
+            <option value="Confirmado" ${sol['Status']==='Confirmado'?'selected':''}>Confirmado</option>
+            <option value="Realizado"  ${sol['Status']==='Realizado' ?'selected':''}>Realizado</option>
+            <option value="Cancelado"  ${sol['Status']==='Cancelado' ?'selected':''}>Cancelado</option>
+          </select>
+        </td>
+        <td class="btn-hide-print">
+          <div style="display:flex; gap:5px;">
+            <button class="btn" style="padding:4px 8px; font-size:11px; background:var(--primary-color); color:white;" onclick="startEditSolicitacao('${idEsc}')">Editar</button>
+            <button class="btn btn-danger" style="padding:4px 8px; font-size:11px;" onclick="deleteSolicitacao('${idEsc}')">Excluir</button>
+          </div>
+        </td>
+      </tr>`;
+    }).join('');
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════
+     FILTERS
+  ═══════════════════════════════════════════════════════════════════════ */
+  function applyFilters() {
+    const fEmp    = document.getElementById('filter-empenho').value;
+    const fReg    = document.getElementById('filter-regiao').value;
+    const fStat   = document.getElementById('filter-status').value;
+    const search  = document.getElementById('search-evento').value.toLowerCase().trim();
+    const hasFilter = fEmp || fReg || fStat || search;
+    document.getElementById('btn-clear-filters').style.display = hasFilter ? 'inline-flex' : 'none';
+
+    const filtered = appData.solicitacoes.filter(sol => {
+      if (fEmp  && sol['Nº Empenho'] !== fEmp)  return false;
+      if (fStat && sol['Status'] !== fStat)      return false;
+      const item = appData.itens.find(it => it['Nº Empenho'] === sol['Nº Empenho'] && it['Código'] == sol['Código Item']);
+      if (fReg  && (!item || item['Região'] !== fReg)) return false;
+      if (search) {
+        const hay = [
+          sol['Nome do Evento'], sol['Local do Evento'], sol['Resp. Montagem'],
+          sol['Nº Solicitação'], sol['Nº Empenho'], sol['Código Item'], sol['Datas do Evento']
+        ].map(v => (v || '').toLowerCase());
+        if (!hay.some(h => h.includes(search))) return false;
+      }
+      return true;
+    });
+    renderSolicitacoesTable(filtered);
+  }
+
+  function clearFilters() {
+    document.getElementById('filter-empenho').value = '';
+    document.getElementById('filter-regiao').value  = '';
+    document.getElementById('filter-status').value  = '';
+    document.getElementById('search-evento').value  = '';
+    document.getElementById('btn-clear-filters').style.display = 'none';
+    renderSolicitacoesTable(appData.solicitacoes);
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════
+     MODALS: DETAILS
+  ═══════════════════════════════════════════════════════════════════════ */
+  function showSolicitacaoDetails(id) {
+    const sol  = appData.solicitacoes.find(s => s['Nº Solicitação'] == id);
+    if (!sol) return;
+    const item  = appData.itens.find(it => it['Nº Empenho'] === sol['Nº Empenho'] && it['Código'] == sol['Código Item']);
+    const total = (Number(sol['Qtde Consumida']) || 0) * (item ? item['Valor Unitário'] : 0);
+
+    document.getElementById('modal-title').textContent = `Solicitação Nº ${sol['Nº Solicitação']}`;
+    document.getElementById('modal-content').className = 'details-grid';
+    document.getElementById('modal-content').innerHTML = `
+      <div class="detail-item full-width"><span class="detail-label">Nome do Evento</span><span class="detail-value">${sol['Nome do Evento']}</span></div>
+      <div class="detail-item"><span class="detail-label">Empenho</span><span class="detail-value">${sol['Nº Empenho']}</span></div>
+      <div class="detail-item"><span class="detail-label">Item / Código</span><span class="detail-value">${sol['Código Item']}${item ? ' — ' + item['Descrição'] : ''}</span></div>
+      <div class="detail-item"><span class="detail-label">Região</span><span class="detail-value">${item ? item['Região'] : '-'}</span></div>
+      <div class="detail-item"><span class="detail-label">Quantidade</span><span class="detail-value">${sol['Qtde Consumida']} diárias</span></div>
+      <div class="detail-item"><span class="detail-label">Valor Total</span><span class="detail-value" style="color:var(--primary-color); font-weight:800;">${formatCurrency(total)}</span></div>
+      <div class="detail-item"><span class="detail-label">Datas</span><span class="detail-value">${formatMultiDates(sol['Datas do Evento'])}</span></div>
+      <div class="detail-item"><span class="detail-label">Data Registro</span><span class="detail-value">${formatDate(sol['Data Solicitação']) || '-'}</span></div>
+      <div class="detail-item"><span class="detail-label">Horários</span><span class="detail-value">${formatTime(sol['Horário Início'])} às ${formatTime(sol['Horário Fim'])}</span></div>
+      <div class="detail-item full-width"><span class="detail-label">Local</span><span class="detail-value">${sol['Local do Evento']}</span></div>
+      <div class="detail-item"><span class="detail-label">Responsável</span><span class="detail-value">${sol['Resp. Montagem']}</span></div>
+      <div class="detail-item"><span class="detail-label">Contato</span><span class="detail-value">${sol['Contato Resp.']}</span></div>
+      <div class="detail-item"><span class="detail-label">Status</span><span class="detail-value">${sol['Status']}</span></div>
+      <div class="detail-item"><span class="detail-label">Nota Fiscal</span><span class="detail-value">${sol['Nº Nota Fiscal'] || 'Não informada'}</span></div>
+      <div class="detail-item full-width"><span class="detail-label">PDF</span><span class="detail-value">${sol['Link PDF'] ? `<a href="${sol['Link PDF']}" target="_blank" style="color:var(--primary-light);">Ver PDF</a>` : 'Nenhum PDF'}</span></div>
+      <div class="detail-item full-width"><span class="detail-label">Observações</span><span class="detail-value" style="font-weight:normal; font-style:italic;">${sol['Observações'] || 'Sem observações.'}</span></div>
+    `;
+    document.getElementById('modal-footer-btns').innerHTML = `
+      <button class="btn btn-secondary" onclick="closeDetailModal(null)">Fechar</button>
+      <button class="btn" style="background:var(--primary-color);color:white;" onclick="startEditSolicitacao('${escapeAttr(id)}')">Editar</button>
+      <button class="btn btn-danger" onclick="deleteSolicitacao('${escapeAttr(id)}')">Excluir</button>
+    `;
+    document.getElementById('detail-modal').classList.add('open');
+  }
+
+  function showItemDetails(item) {
+    const solsItem = appData.solicitacoes.filter(s => s['Nº Empenho'] === item['Nº Empenho'] && s['Código Item'] == item['Código']);
+    const empMatch = appData.empenhos.find(e => e['Nº Empenho'] === item['Nº Empenho']);
+
+    const solTable = solsItem.length === 0
+      ? '<p style="font-size:12px; color:var(--text-muted); font-style:italic;">Nenhum lançamento vinculado ainda.</p>'
+      : `<div style="max-height:180px; overflow-y:auto; border:1px solid var(--border-color); border-radius:var(--radius-sm);">
+          <table style="font-size:11px; width:100%;">
+            <thead><tr style="background:var(--primary-color);">
+              <th style="padding:6px;">OS</th><th style="padding:6px;">Evento</th>
+              <th style="padding:6px;">Qtd</th><th style="padding:6px;">Horários</th><th style="padding:6px;">Status</th>
+            </tr></thead>
+            <tbody>${solsItem.map(s => `<tr style="border-bottom:1px dashed #e2e8f0;">
+              <td style="padding:6px;"><strong>${s['Nº Solicitação']}</strong></td>
+              <td style="padding:6px;">${s['Nome do Evento']}</td>
+              <td style="padding:6px; text-align:center;">${s['Qtde Consumida']}</td>
+              <td style="padding:6px;"><small>${formatTime(s['Horário Início'])} às ${formatTime(s['Horário Fim'])}</small></td>
+              <td style="padding:6px;">${s['Status']}</td>
+            </tr>`).join('')}</tbody>
+          </table>
+        </div>`;
+
+    document.getElementById('modal-title').textContent = `Estoque: Item ${item['Código']}`;
+    document.getElementById('modal-content').className = 'details-grid';
+    document.getElementById('modal-content').innerHTML = `
+      <div class="detail-item full-width"><span class="detail-label">Descrição</span><span class="detail-value">${item['Descrição']}</span></div>
+      <div class="detail-item"><span class="detail-label">Empenho</span><span class="detail-value">${item['Nº Empenho']}</span></div>
+      <div class="detail-item"><span class="detail-label">Fornecedor</span><span class="detail-value">${empMatch ? empMatch['Fornecedor'] : '-'}</span></div>
+      <div class="detail-item"><span class="detail-label">Lote / Item</span><span class="detail-value">Lote ${item['Lote']} — Item ${item['Item']}</span></div>
+      <div class="detail-item"><span class="detail-label">Região</span><span class="detail-value">${item['Região']}</span></div>
+      <div class="detail-item"><span class="detail-label">Diárias Autorizadas</span><span class="detail-value">${item['Qtde Autorizada']} ${item['Unidade']}</span></div>
+      <div class="detail-item"><span class="detail-label">Utilizadas</span><span class="detail-value">${item.qtyUtilizada} ${item['Unidade']}</span></div>
+      <div class="detail-item"><span class="detail-label">Saldo (Diárias)</span><span class="detail-value highlight-ok">${item.qtyDisponivel} ${item['Unidade']}</span></div>
+      <div class="detail-item"><span class="detail-label">Valor Unitário</span><span class="detail-value">${formatCurrency(item['Valor Unitário'])}</span></div>
+      <div class="detail-item"><span class="detail-label">Saldo Financeiro</span><span class="detail-value" style="color:var(--primary-color); font-weight:800;">${formatCurrency(item.qtyDisponivel * item['Valor Unitário'])}</span></div>
+      <div class="detail-item"><span class="detail-label">Status</span><span class="detail-value">${item.status}</span></div>
+      <div class="detail-item full-width"><span class="detail-label" style="margin-bottom:6px; display:block;">Histórico de Utilização</span>${solTable}</div>
+    `;
+    document.getElementById('modal-footer-btns').innerHTML = `
+      <button class="btn btn-secondary" onclick="closeDetailModal(null)">Fechar</button>
+      <button class="btn" style="background:var(--primary-light);color:white;" onclick="imprimirRelatorioItem('${item['Código']}','${item['Nº Empenho']}')">PDF Consumo</button>
+      <button class="btn btn-primary" onclick="goToLancamentoComItem('${item['Nº Empenho']}','${item['Código']}')">Nova Solicitação</button>
+    `;
+    document.getElementById('detail-modal').classList.add('open');
+  }
+
+  function abrirRelatorioCruzado(campo, valor) {
+    const filtradas = appData.solicitacoes.filter(s => (s[campo] || '').trim() === valor.trim());
+    document.getElementById('modal-title').textContent = `Lançamentos: ${valor}`;
+    document.getElementById('modal-content').className = 'details-grid';
+    document.getElementById('modal-content').innerHTML = `
+      <div style="grid-column:1/-1;">
+        <p style="font-size:13px; font-weight:700; color:var(--text-muted); margin-bottom:10px;">${filtradas.length} lançamento(s) vinculado(s) a: "${valor}"</p>
+        <div class="table-container" style="max-height:320px; overflow-y:auto;">
+          <table style="font-size:11.5px;">
+            <thead><tr>
+              <th style="padding:8px;">OS</th><th style="padding:8px;">Evento</th>
+              <th style="padding:8px;">Item</th><th style="padding:8px;">Qtd</th>
+              <th style="padding:8px;">Local</th><th style="padding:8px;">Responsável</th>
+              <th style="padding:8px;">Horários</th><th style="padding:8px;">Status</th>
+            </tr></thead>
+            <tbody>${filtradas.map(s => `<tr style="border-bottom:1px solid var(--border-color);">
+              <td style="padding:8px;"><strong>${s['Nº Solicitação']}</strong></td>
+              <td style="padding:8px;">${s['Nome do Evento']}<br><small style="color:var(--text-muted);">${s['Datas do Evento']||''}</small></td>
+              <td style="padding:8px;">${s['Código Item']}</td>
+              <td style="padding:8px; text-align:center;">${s['Qtde Consumida']}</td>
+              <td style="padding:8px;"><small>${s['Local do Evento']}</small></td>
+              <td style="padding:8px;">${s['Resp. Montagem']}</td>
+              <td style="padding:8px;"><small>${formatTime(s['Horário Início'])} às ${formatTime(s['Horário Fim'])}</small></td>
+              <td style="padding:8px;">${s['Status']}</td>
+            </tr>`).join('')}</tbody>
+          </table>
+        </div>
+      </div>
+    `;
+    document.getElementById('modal-footer-btns').innerHTML = `
+      <button class="btn btn-secondary" onclick="closeDetailModal(null)">Fechar</button>
+      <button class="btn btn-primary" onclick="imprimirRelatorioEspecifico('${escapeAttr(campo)}','${escapeAttr(valor)}')">Imprimir (PDF)</button>
+    `;
+    document.getElementById('detail-modal').classList.add('open');
+  }
+
+  function goToLancamentoComItem(empNo, itemCode) {
+    closeDetailModal(null);
+    clearSolicitacaoForm();
+    switchTab('lancamento');
+    document.getElementById('numeroEmpenho').value = empNo;
+    onEmpenhoSelect();
+    document.getElementById('codigoItem').value = itemCode;
+    onItemSelect();
+  }
+
+  function closeDetailModal(event) {
+    if (event && event.target !== document.getElementById('detail-modal')) return;
+    document.getElementById('detail-modal').classList.remove('open');
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════
+     CONFIRM MODAL
+  ═══════════════════════════════════════════════════════════════════════ */
+  function showConfirm(title, msg, confirmLabel = 'Confirmar', isDanger = true) {
+    return new Promise(resolve => {
+      confirmResolve = resolve;
+      document.getElementById('modal-confirm-title').textContent = title;
+      document.getElementById('modal-confirm-msg').textContent   = msg;
+      const btn = document.getElementById('btn-confirm-ok');
+      btn.textContent            = confirmLabel;
+      btn.style.backgroundColor  = isDanger ? 'var(--status-error)' : 'var(--primary-color)';
+      btn.style.color            = 'white';
+      document.getElementById('modal-confirm').classList.add('open');
+    });
+  }
+
+  function resolveConfirm(value) {
+    document.getElementById('modal-confirm').classList.remove('open');
+    if (confirmResolve) { confirmResolve(value); confirmResolve = null; }
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════
+     ADMIN: USUARIOS
+  ═══════════════════════════════════════════════════════════════════════ */
+  function carregarUsuarios() {
+    if (!authToken || !currentUser || currentUser.perfil !== 'admin') return;
+    showLoading('Carregando usuários...');
+    if (typeof google !== 'undefined' && google.script && google.script.run) {
+      google.script.run.withSuccessHandler(renderUsuarios).withFailureHandler(() => hideLoading()).listarUsuarios(authToken);
+    } else {
+      setTimeout(() => renderUsuarios({ success: true, usuarios: [
+        { login: 'admin', nome: 'Administrador', perfil: 'admin', ativo: true, primeiroAcesso: false, criadoEm: '07/07/2026', ultimoAcesso: 'Agora' }
+      ]}), 500);
+    }
+  }
+
+  function renderUsuarios(result) {
+    hideLoading();
+    if (!result.success) { showToast('Erro: ' + result.error, 'error'); return; }
+    const tbody = document.getElementById('admin-usuarios-body');
+    if (!result.usuarios.length) {
+      tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:20px; color:var(--text-muted);">Nenhum usuário cadastrado.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = result.usuarios.map(u => `
+      <tr>
+        <td><strong>${u.login}</strong></td>
+        <td>${u.nome}</td>
+        <td><span class="table-badge ${u.perfil === 'admin' ? 'status-badge-warning' : 'status-badge-ok'}">${u.perfil === 'admin' ? 'Admin' : 'Usuário'}</span></td>
+        <td style="font-size:12px;">${u.criadoEm}</td>
+        <td style="font-size:12px;">${u.ultimoAcesso}</td>
+        <td><span class="table-badge ${u.ativo ? 'status-badge-ok' : 'status-badge-error'}">${u.ativo ? 'Ativo' : 'Inativo'}</span></td>
+        <td><span class="table-badge ${u.primeiroAcesso ? 'status-badge-warning' : 'status-badge-ok'}">${u.primeiroAcesso ? 'Pendente' : 'OK'}</span></td>
+        <td>
+          <div style="display:flex; gap:4px; flex-wrap:wrap;">
+            <button class="btn" style="padding:3px 8px; font-size:11px; background:#e2e8f0; color:var(--text-main);" onclick="abrirRedefinirSenha('${u.login}')">Reset Senha</button>
+            ${u.login !== currentUser.login ? `
+              <button class="btn" style="padding:3px 8px; font-size:11px; background:${u.ativo ? 'var(--status-error-bg)' : 'var(--status-ok-bg)'}; color:${u.ativo ? 'var(--status-error)' : 'var(--status-ok)'};"
+                onclick="toggleUsuarioAtivo('${u.login}', ${!u.ativo})">${u.ativo ? 'Desativar' : 'Ativar'}</button>
+            ` : ''}
+          </div>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  function abrirModalNovoUsuario() {
+    ['nu-login','nu-nome','nu-senha'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('nu-perfil').value    = 'usuario';
+    document.getElementById('nu-error').style.display = 'none';
+    document.getElementById('modal-novo-usuario').classList.add('open');
+  }
+
+  function fecharModalNovoUsuario() {
+    document.getElementById('modal-novo-usuario').classList.remove('open');
+  }
+
+  function salvarNovoUsuario() {
+    const login  = document.getElementById('nu-login').value.trim();
+    const nome   = document.getElementById('nu-nome').value.trim();
+    const perfil = document.getElementById('nu-perfil').value;
+    const senha  = document.getElementById('nu-senha').value;
+    const errEl  = document.getElementById('nu-error');
+    if (!login || !nome || !senha) { errEl.textContent = 'Preencha todos os campos.'; errEl.style.display = 'block'; return; }
+    errEl.style.display = 'none';
+    showLoading('Criando usuário...');
+    if (typeof google !== 'undefined' && google.script && google.script.run) {
+      google.script.run
+        .withSuccessHandler(res => {
+          hideLoading();
+          if (res.success) { fecharModalNovoUsuario(); showToast('Usuário criado com sucesso.', 'success'); carregarUsuarios(); }
+          else { errEl.textContent = res.error; errEl.style.display = 'block'; }
+        })
+        .withFailureHandler(() => { hideLoading(); errEl.textContent = 'Erro de comunicação.'; errEl.style.display = 'block'; })
+        .cadastrarUsuario(authToken, { login, nome, perfil, senhaInicial: senha });
+    } else {
+      setTimeout(() => { hideLoading(); fecharModalNovoUsuario(); showToast('Usuário criado (mock).', 'success'); }, 500);
+    }
+  }
+
+  async function toggleUsuarioAtivo(loginAlvo, novoAtivo) {
+    const ok = await showConfirm(
+      novoAtivo ? 'Ativar Usuário' : 'Desativar Usuário',
+      `${novoAtivo ? 'Ativar' : 'Desativar'} o usuário "${loginAlvo}"?`,
+      novoAtivo ? 'Ativar' : 'Desativar',
+      !novoAtivo
+    );
+    if (!ok) return;
+    showLoading('Atualizando...');
+    if (typeof google !== 'undefined' && google.script && google.script.run) {
+      google.script.run
+        .withSuccessHandler(res => { hideLoading(); showToast(res.success ? 'Usuário atualizado.' : 'Erro: ' + res.error, res.success ? 'success' : 'error'); if (res.success) carregarUsuarios(); })
+        .withFailureHandler(() => { hideLoading(); showToast('Erro de comunicação.', 'error'); })
+        .alterarStatusUsuario(authToken, loginAlvo, novoAtivo);
+    } else {
+      setTimeout(() => { hideLoading(); showToast('Atualizado (mock).', 'success'); }, 400);
+    }
+  }
+
+  function abrirRedefinirSenha(loginAlvo) {
+    const novaSenha = prompt(`Nova senha para "${loginAlvo}" (mínimo 8 caracteres):`);
+    if (!novaSenha) return;
+    if (novaSenha.length < 8) { showToast('Senha muito curta (mínimo 8 caracteres).', 'warning'); return; }
+    showLoading('Redefinindo senha...');
+    if (typeof google !== 'undefined' && google.script && google.script.run) {
+      google.script.run
+        .withSuccessHandler(res => {
+          hideLoading();
+          showToast(res.success ? 'Senha redefinida. Usuário deverá alterá-la no próximo acesso.' : 'Erro: ' + res.error, res.success ? 'success' : 'error');
+        })
+        .withFailureHandler(() => { hideLoading(); showToast('Erro.', 'error'); })
+        .redefinirSenhaAdmin(authToken, loginAlvo, novaSenha);
+    } else {
+      setTimeout(() => { hideLoading(); showToast('Senha redefinida (mock).', 'success'); }, 400);
+    }
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════
+     ADMIN: LOGS
+  ═══════════════════════════════════════════════════════════════════════ */
+  function carregarLogs() {
+    if (!authToken || !currentUser || currentUser.perfil !== 'admin') return;
+    showLoading('Carregando logs...');
+    if (typeof google !== 'undefined' && google.script && google.script.run) {
+      google.script.run.withSuccessHandler(renderLogs).withFailureHandler(() => hideLoading()).obterLogs(authToken);
+    } else {
+      setTimeout(() => renderLogs({ success: true, logs: [
+        { timestamp: '07/07/2026 17:29:00', login: 'admin', nome: 'Administrador', acao: 'LOGIN', detalhes: 'Acesso via web app' },
+        { timestamp: '07/07/2026 17:30:11', login: 'admin', nome: 'Administrador', acao: 'NOVA_SOLICITACAO', detalhes: '0159/2026 — Evento: VARANDA MUSICAL' }
+      ]}), 500);
+    }
+  }
+
+  function renderLogs(result) {
+    hideLoading();
+    if (!result.success) { showToast('Erro: ' + result.error, 'error'); return; }
+    allLogs = result.logs || [];
+    filtrarLogs();
+  }
+
+  function filtrarLogs() {
+    const search = document.getElementById('log-search').value.toLowerCase().trim();
+    const fAcao  = document.getElementById('log-filter-acao').value;
+    const filtered = allLogs.filter(log => {
+      if (fAcao  && log.acao !== fAcao) return false;
+      if (search) {
+        const hay = [log.login, log.nome, log.acao, log.detalhes, log.timestamp].map(v => (v||'').toLowerCase());
+        if (!hay.some(h => h.includes(search))) return false;
+      }
+      return true;
+    });
+    const ACAO_COLORS = {
+      'LOGIN': '#dcfce7', 'LOGOUT': '#f1f5f9', 'NOVA_SOLICITACAO': '#dbeafe',
+      'EDITAR_SOLICITACAO': '#fef3c7', 'EXCLUIR_SOLICITACAO': '#fee2e2',
+      'STATUS': '#ede9fe', 'NOVO_EMPENHO': '#dbeafe', 'CRIAR_USUARIO': '#dcfce7',
+      'RESET_SENHA': '#fef3c7', 'TROCA_SENHA': '#fef3c7', 'ALTERAR_USUARIO': '#fef3c7'
+    };
+    const tbody = document.getElementById('admin-logs-body');
+    if (!filtered.length) {
+      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:20px; color:var(--text-muted);">Nenhum registro.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = filtered.slice(0, 500).map(log => `
+      <tr>
+        <td style="font-size:12px; white-space:nowrap;">${log.timestamp}</td>
+        <td><strong style="font-size:12px;">${log.login}</strong></td>
+        <td style="font-size:12px;">${log.nome}</td>
+        <td><span style="font-size:11px; font-weight:700; padding:2px 8px; border-radius:4px; background:${ACAO_COLORS[log.acao]||'#f1f5f9'};">${log.acao}</span></td>
+        <td style="font-size:12px; color:var(--text-muted);">${log.detalhes}</td>
+      </tr>
+    `).join('');
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════
+     CADASTRAR EMPENHO
+  ═══════════════════════════════════════════════════════════════════════ */
+  function adicionarItemNaListaTemporaria() {
+    const lote    = document.getElementById('item-lote').value;
+    const idx     = document.getElementById('item-index').value;
+    const codigo  = document.getElementById('item-codigo').value.trim();
+    const desc    = document.getElementById('item-descricao').value.trim();
+    const regiao  = document.getElementById('item-regiao').value;
+    const unidade = document.getElementById('item-unidade').value.trim();
+    const qty     = document.getElementById('item-qty').value;
+    const valUn   = document.getElementById('item-valor-un').value;
+
+    if (!lote || !idx || !codigo || !desc || !qty || !valUn) { showToast('Preencha todos os campos do item.', 'warning'); return; }
+    
+    if (editingItemIndex === null) {
+      if (tempItemsList.some(it => it.codigo === codigo)) { showToast(`Código ${codigo} já adicionado.`, 'warning'); return; }
+    } else {
+      if (tempItemsList.some((it, index) => index !== editingItemIndex && it.codigo === codigo)) { 
+        showToast(`Código ${codigo} já existe em outro item deste contrato.`, 'warning'); 
+        return; 
+      }
+    }
+
+    const itemData = {
+      lote: parseInt(lote,10), itemIndex: parseInt(idx,10), codigo, descricao: desc,
+      regiao, unidade, qtyAutorizada: parseInt(qty,10), valorUnitario: parseFloat(valUn)
+    };
+
+    if (editingItemIndex !== null) {
+      tempItemsList[editingItemIndex] = itemData;
+      editingItemIndex = null;
+      document.getElementById('btn-inserir-item').textContent = 'Inserir Item no Contrato';
+      showToast('Item atualizado com sucesso.', 'success');
+    } else {
+      tempItemsList.push(itemData);
+    }
+
+    renderTempItems();
+    ['item-lote','item-index','item-codigo','item-descricao','item-qty','item-valor-un'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('btn-gravar-empenho').disabled = false;
+  }
+
+  function removerItemDaListaTemporaria(i) {
+    tempItemsList.splice(i, 1);
+    if (editingItemIndex === i) {
+      editingItemIndex = null;
+      document.getElementById('btn-inserir-item').textContent = 'Inserir Item no Contrato';
+      ['item-lote','item-index','item-codigo','item-descricao','item-qty','item-valor-un'].forEach(id => document.getElementById(id).value = '');
+    } else if (editingItemIndex > i) {
+      editingItemIndex--;
+    }
+    renderTempItems();
+    if (!tempItemsList.length) document.getElementById('btn-gravar-empenho').disabled = true;
+  }
+
+  function editarItemDaListaTemporaria(i) {
+    const item = tempItemsList[i];
+    editingItemIndex = i;
+
+    document.getElementById('item-lote').value = item.lote;
+    document.getElementById('item-index').value = item.itemIndex;
+    document.getElementById('item-codigo').value = item.codigo;
+    document.getElementById('item-descricao').value = item.descricao;
+    document.getElementById('item-regiao').value = item.regiao;
+    document.getElementById('item-unidade').value = item.unidade;
+    document.getElementById('item-qty').value = item.qtyAutorizada;
+    document.getElementById('item-valor-un').value = item.valorUnitario;
+
+    document.getElementById('btn-inserir-item').textContent = 'Salvar Alterações do Item';
+    showToast('Altere os dados nos campos acima e clique em Salvar.', 'warning');
+  }
+
+  function renderTempItems() {
+    const c = document.getElementById('temp-items-container');
+    if (!tempItemsList.length) {
+      c.innerHTML = '<div style="color:var(--text-muted); font-size:13px; padding:10px; text-align:center; background:#f8fafc; border-radius:var(--radius-sm);">Nenhum item adicionado ainda.</div>';
+      return;
+    }
+    c.innerHTML = tempItemsList.map((item, i) => `
+      <div class="added-item-row">
+        <div>
+          <strong>Cód: ${item.codigo}</strong> — Lote ${item.lote}/Item ${item.itemIndex} — ${item.descricao} (${item.regiao})<br>
+          <small style="color:var(--text-muted);">${item.qtyAutorizada} ${item.unidade} × ${formatCurrency(item.valorUnitario)} = ${formatCurrency(item.qtyAutorizada * item.valorUnitario)}</small>
+        </div>
+        <div style="display:flex; gap:6px;">
+          <button type="button" class="btn" style="padding:4px 8px; font-size:11px; background:var(--primary-color); color:white;" onclick="editarItemDaListaTemporaria(${i})">Editar</button>
+          <button type="button" class="btn btn-danger" style="padding:4px 8px; font-size:11px;" onclick="removerItemDaListaTemporaria(${i})">Remover</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function handleEmpenhoSubmit(event) {
+    event.preventDefault();
+    if (!tempItemsList.length) { showToast('Adicione ao menos um item.', 'warning'); return; }
+    
+    const editIdOrig = document.getElementById('edit-empenho-id-original').value;
+    document.getElementById('btn-gravar-empenho').disabled = true;
+    showLoading(editIdOrig ? 'Salvando alterações do empenho...' : 'Cadastrando empenho...');
+
+    const payload = {
+      numeroEmpenho: document.getElementById('new-empenho-id').value.trim(),
+      tipo:          document.getElementById('new-empenho-tipo').value,
+      dataEmissao:   document.getElementById('new-empenho-emissao').value,
+      vencimento:    document.getElementById('new-empenho-vencimento').value,
+      processo:      document.getElementById('new-empenho-processo').value.trim(),
+      licitacao:     document.getElementById('new-empenho-licitacao').value.trim(),
+      fornecedor:    document.getElementById('new-empenho-fornecedor').value.trim(),
+      cnpj:          document.getElementById('new-empenho-cnpj').value.trim(),
+      dotacao:       document.getElementById('new-empenho-dotacao').value.trim(),
+      valorEmpenhado: parseFloat(document.getElementById('new-empenho-valor').value),
+      itens: tempItemsList,
+      pdfFile: '', pdfFileName: ''
+    };
+
+    const fileInput = document.getElementById('new-empenho-pdf');
+    if (fileInput.files.length > 0) {
+      const reader = new FileReader();
+      reader.onload = e => {
+        payload.pdfFile     = e.target.result;
+        payload.pdfFileName = `Empenho_${payload.numeroEmpenho.split('/').join('_')}_${Date.now()}.pdf`;
+        executeSaveEmpenho(editIdOrig, payload);
+      };
+      reader.readAsDataURL(fileInput.files[0]);
+    } else {
+      executeSaveEmpenho(editIdOrig, payload);
+    }
+  }
+
+  function executeSaveEmpenho(editIdOrig, payload) {
+    if (typeof google !== 'undefined' && google.script && google.script.run) {
+      const fn = editIdOrig ? 'editarEmpenhoComItens' : 'cadastrarNovoEmpenhoComItens';
+      const args = editIdOrig ? [authToken, editIdOrig, payload] : [authToken, payload];
+      google.script.run.withSuccessHandler(onEmpenhoSaved).withFailureHandler(err => { hideLoading(); showToast('Falha: ' + (err.message||err), 'error'); document.getElementById('btn-gravar-empenho').disabled = false; })[fn](...args);
+    } else {
+      setTimeout(() => {
+        if (editIdOrig) {
+          const idx = appData.empenhos.findIndex(e => e['Nº Empenho'] === editIdOrig);
+          if (idx !== -1) {
+            appData.empenhos[idx] = {
+              'Nº Empenho': payload.numeroEmpenho, 'Tipo': payload.tipo, 'Data Emissão': payload.dataEmissao,
+              'Vencimento': payload.vencimento, 'Processo': payload.processo, 'Licitação': payload.licitacao,
+              'Fornecedor': payload.fornecedor, 'CNPJ': payload.cnpj, 'Órgão': 'SETUR', 'Dotação': payload.dotacao,
+              'Valor Empenhado': payload.valorEmpenhado, valorConsumido: 0, saldo: payload.valorEmpenhado, pctUtilizado: 0, status: 'Ativo', 'Link PDF': ''
+            };
+          }
+          appData.itens = appData.itens.filter(it => it['Nº Empenho'] !== editIdOrig);
+          payload.itens.forEach(it => appData.itens.push({
+            'Nº Empenho': payload.numeroEmpenho, 'Lote': it.lote, 'Item': it.itemIndex, 'Código': it.codigo,
+            'Descrição': it.descricao, 'Região': it.regiao, 'Unidade': it.unidade, 'Qtde Autorizada': it.qtyAutorizada,
+            'Valor Unitário': it.valorUnitario, qtyUtilizada: 0, qtyDisponivel: it.qtyAutorizada, pctUtilizado: 0, status: 'Disponível'
+          }));
+        } else {
+          const newEmp = { 'Nº Empenho': payload.numeroEmpenho, 'Fornecedor': payload.fornecedor, 'CNPJ': payload.cnpj, 'Valor Empenhado': payload.valorEmpenhado, valorConsumido: 0, saldo: payload.valorEmpenhado, pctUtilizado: 0, status: 'Ativo', 'Link PDF': '' };
+          appData.empenhos.push(newEmp);
+          payload.itens.forEach(it => appData.itens.push({ 'Nº Empenho': payload.numeroEmpenho, 'Lote': it.lote, 'Item': it.itemIndex, 'Código': it.codigo, 'Descrição': it.descricao, 'Região': it.regiao, 'Unidade': it.unidade, 'Qtde Autorizada': it.qtyAutorizada, 'Valor Unitário': it.valorUnitario, qtyUtilizada: 0, qtyDisponivel: it.qtyAutorizada, pctUtilizado: 0, status: 'Disponível' }));
+        }
+        onEmpenhoSaved({ success: true });
+      }, 900);
+    }
+  }
+
+  function onEmpenhoSaved(res) {
+    if (res.success) {
+      showToast('Empenho gravado com sucesso.', 'success');
+      limparFormEmpenho();
+      switchTab('dashboard');
+      loadData();
+    } else {
+      hideLoading();
+      showToast('Erro: ' + res.error, 'error');
+      document.getElementById('btn-gravar-empenho').disabled = false;
+    }
+  }
+
+  function startEditEmpenho(empNo) {
+    const emp = appData.empenhos.find(e => e['Nº Empenho'] === empNo);
+    if (!emp) return;
+    const itensEmp = appData.itens.filter(it => it['Nº Empenho'] === empNo);
+
+    switchTab('abastecer');
+    document.querySelector('#abastecer h2').textContent = `Editar Contrato / Empenho ${empNo}`;
+    document.getElementById('edit-empenho-id-original').value = empNo;
+    document.getElementById('btn-cancel-edit-empenho').style.display = 'inline-flex';
+    document.getElementById('btn-gravar-empenho').textContent = 'Salvar Alterações';
+
+    document.getElementById('new-empenho-id').value = emp['Nº Empenho'];
+    document.getElementById('new-empenho-tipo').value = emp['Tipo'];
+    document.getElementById('new-empenho-emissao').value = emp['Data Emissão'];
+    document.getElementById('new-empenho-vencimento').value = emp['Vencimento'];
+    document.getElementById('new-empenho-processo').value = emp['Processo'];
+    document.getElementById('new-empenho-licitacao').value = emp['Licitação'];
+    document.getElementById('new-empenho-fornecedor').value = emp['Fornecedor'];
+    document.getElementById('new-empenho-cnpj').value = emp['CNPJ'];
+    document.getElementById('new-empenho-dotacao').value = emp['Dotação'];
+    document.getElementById('new-empenho-valor').value = emp['Valor Empenhado'];
+
+    tempItemsList = itensEmp.map(it => ({
+      lote: parseInt(it['Lote'], 10),
+      itemIndex: parseInt(it['Item'], 10),
+      codigo: it['Código'],
+      descricao: it['Descrição'],
+      regiao: it['Região'],
+      unidade: it['Unidade'] || 'UND/DIA',
+      qtyAutorizada: parseInt(it['Qtde Autorizada'], 10),
+      valorUnitario: parseFloat(it['Valor Unitário'])
+    }));
+    renderTempItems();
+    document.getElementById('btn-gravar-empenho').disabled = false;
+  }
+
+  function cancelarEdicaoEmpenho() {
+    limparFormEmpenho();
+    switchTab('dashboard');
+  }
+
+  function limparFormEmpenho() {
+    document.getElementById('form-empenho').reset();
+    document.querySelector('#abastecer h2').textContent = 'Cadastrar Novo Contrato / Empenho';
+    document.getElementById('edit-empenho-id-original').value = '';
+    document.getElementById('btn-cancel-edit-empenho').style.display = 'none';
+    document.getElementById('btn-gravar-empenho').textContent = 'Gravar Empenho';
+    document.getElementById('btn-inserir-item').textContent = 'Inserir Item no Contrato';
+    editingItemIndex = null;
+    tempItemsList = [];
+    renderTempItems();
+    document.getElementById('btn-gravar-empenho').disabled = true;
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('new-empenho-emissao').value    = today;
+    document.getElementById('new-empenho-vencimento').value = today;
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════
+     IMPRESSÃO / PDF
+  ═══════════════════════════════════════════════════════════════════════ */
+  function preparePrint(titulo, html) {
+    document.getElementById('print-geral-titulo').textContent = titulo;
+    document.getElementById('print-geral-data').textContent  = new Date().toLocaleString('pt-BR');
+    document.getElementById('print-table-wrapper').innerHTML = html;
+  }
+
+  function openPrintCustomizer(title, defaultCols, onConfirm) {
+    const container = document.getElementById('colunas-checkbox-container');
+    container.innerHTML = '';
+    const modalTitle = document.querySelector('#modal-colunas-relatorio h3');
+    if (modalTitle) modalTitle.textContent = `Customizar Colunas — ${title}`;
+
+    defaultCols.forEach(col => {
+      const label = document.createElement('label');
+      label.style.display = 'flex';
+      label.style.alignItems = 'center';
+      label.style.gap = '10px';
+      label.style.cursor = 'pointer';
+      label.style.fontSize = '13.5px';
+      label.style.userSelect = 'none';
+      label.style.padding = '4px 0';
+      
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.value = col.id;
+      checkbox.checked = true;
+      checkbox.style.width = '17px';
+      checkbox.style.height = '17px';
+      checkbox.style.cursor = 'pointer';
+      
+      label.appendChild(checkbox);
+      label.appendChild(document.createTextNode(col.label));
+      container.appendChild(label);
+    });
+    
+    document.getElementById('btn-gerar-relatorio').onclick = () => {
+      const selected = Array.from(container.querySelectorAll('input:checked')).map(cb => cb.value);
+      if (selected.length === 0) {
+        showToast('Selecione pelo menos uma coluna.', 'warning');
+        return;
+      }
+      fecharModalColunas();
+      onConfirm(selected);
+    };
+    
+    document.getElementById('modal-colunas-relatorio').classList.add('open');
+  }
+
+  function fecharModalColunas() {
+    document.getElementById('modal-colunas-relatorio').classList.remove('open');
+  }
+
+  function buildSaidasTableHtml(list, selectedColIds) {
+    const defaultCols = [
+      { id: 'os_empenho', label: 'OS / Empenho' },
+      { id: 'data', label: 'Data' },
+      { id: 'evento', label: 'Evento' },
+      { id: 'item', label: 'Item' },
+      { id: 'qtd', label: 'Qtd' },
+      { id: 'local', label: 'Local' },
+      { id: 'responsavel', label: 'Responsável' },
+      { id: 'horarios', label: 'Horários' },
+      { id: 'status', label: 'Status' }
+    ];
+
+    const activeCols = selectedColIds 
+      ? defaultCols.filter(c => selectedColIds.includes(c.id))
+      : defaultCols;
+
+    return `<table style="width:100%;">
+      <thead><tr>
+        ${activeCols.map(c => {
+          let style = '';
+          if (c.id === 'os_empenho') style = ' style="width: 120px;"';
+          return `<th${style}>${c.label}</th>`;
+        }).join('')}
+      </tr></thead>
+      <tbody>${list.map(sol => {
+        const itemInfo = appData.itens.find(i => i['Código'] == sol['Código Item'] && i['Nº Empenho'] === sol['Nº Empenho']);
+        const desc = itemInfo ? itemInfo['Descrição'] : '';
+        
+        const colContentMap = {
+          os_empenho: `<td><strong>${sol['Nº Solicitação']}</strong><br><small style="color:var(--text-muted);font-size:11px;">${sol['Nº Empenho']}</small></td>`,
+          data: `<td>${formatDate(sol['Data Solicitação'])}</td>`,
+          evento: `<td><strong>${sol['Nome do Evento']}</strong><br><small>${sol['Datas do Evento']||''}</small></td>`,
+          item: `<td><strong>${sol['Código Item']}</strong>${desc ? `<br><small style="color:var(--text-muted);font-size:11px;">${desc}</small>` : ''}</td>`,
+          qtd: `<td>${sol['Qtde Consumida']}</td>`,
+          local: `<td>${sol['Local do Evento']}</td>`,
+          responsavel: `<td>${sol['Resp. Montagem']}<br><small>${sol['Contato Resp.']}</small></td>`,
+          horarios: `<td>${formatTime(sol['Horário Início'])} às ${formatTime(sol['Horário Fim'])}</td>`,
+          status: `<td>${sol['Status']}</td>`
+        };
+
+        return `<tr>
+          ${activeCols.map(c => colContentMap[c.id]).join('')}
+        </tr>`;
+      }).join('')}</tbody>
+    </table>`;
+  }
+
+  function buildEstoqueTableHtml(list, selectedColIds) {
+    const defaultCols = [
+      { id: 'empenho', label: 'Empenho' },
+      { id: 'item', label: 'Item' },
+      { id: 'codigo', label: 'Código' },
+      { id: 'descricao', label: 'Descrição' },
+      { id: 'regiao', label: 'Região' },
+      { id: 'autorizado', label: 'Autorizado' },
+      { id: 'utilizado', label: 'Utilizado' },
+      { id: 'saldo', label: 'Saldo' },
+      { id: 'valor_un', label: 'Valor Un.' },
+      { id: 'saldo_fin', label: 'Saldo Fin.' },
+      { id: 'status', label: 'Status' }
+    ];
+
+    const activeCols = selectedColIds 
+      ? defaultCols.filter(c => selectedColIds.includes(c.id))
+      : defaultCols;
+
+    return `<table style="width:100%;">
+      <thead><tr>
+        ${activeCols.map(c => `<th>${c.label}</th>`).join('')}
+      </tr></thead>
+      <tbody>${list.map(item => {
+        const colContentMap = {
+          empenho: `<td>${item['Nº Empenho']}</td>`,
+          item: `<td>L${item['Lote']}/I${item['Item']}</td>`,
+          codigo: `<td><strong>${item['Código']}</strong></td>`,
+          descricao: `<td>${item['Descrição']}</td>`,
+          regiao: `<td>${item['Região']}</td>`,
+          autorizado: `<td>${item['Qtde Autorizada']}</td>`,
+          utilizado: `<td>${item.qtyUtilizada}</td>`,
+          saldo: `<td><strong>${item.qtyDisponivel}</strong></td>`,
+          valor_un: `<td>${formatCurrency(item['Valor Unitário'])}</td>`,
+          saldo_fin: `<td><strong>${formatCurrency(item.qtyDisponivel * item['Valor Unitário'])}</strong></td>`,
+          status: `<td>${item.status}</td>`
+        };
+
+        return `<tr>
+          ${activeCols.map(c => colContentMap[c.id]).join('')}
+        </tr>`;
+      }).join('')}</tbody>
+    </table>`;
+  }
+
+  function printSaidas() {
+    const fEmp   = document.getElementById('filter-empenho').value;
+    const fReg   = document.getElementById('filter-regiao').value;
+    const fStat  = document.getElementById('filter-status').value;
+    const search = document.getElementById('search-evento').value.toLowerCase().trim();
+    let list     = appData.solicitacoes;
+    if (fEmp || fReg || fStat || search) {
+      list = list.filter(sol => {
+        if (fEmp  && sol['Nº Empenho'] !== fEmp)  return false;
+        if (fStat && sol['Status'] !== fStat)      return false;
+        const it = appData.itens.find(i => i['Nº Empenho'] === sol['Nº Empenho'] && i['Código'] == sol['Código Item']);
+        if (fReg  && (!it || it['Região'] !== fReg)) return false;
+        if (search) {
+          const hay = [sol['Nome do Evento'],sol['Local do Evento'],sol['Resp. Montagem'],sol['Nº Solicitação']].map(v=>(v||'').toLowerCase());
+          if (!hay.some(h => h.includes(search))) return false;
+        }
+        return true;
+      });
+    }
+
+    const cols = [
+      { id: 'os_empenho', label: 'OS / Empenho' },
+      { id: 'data', label: 'Data' },
+      { id: 'evento', label: 'Evento' },
+      { id: 'item', label: 'Item' },
+      { id: 'qtd', label: 'Qtd' },
+      { id: 'local', label: 'Local' },
+      { id: 'responsavel', label: 'Responsável' },
+      { id: 'horarios', label: 'Horários' },
+      { id: 'status', label: 'Status' }
+    ];
+
+    openPrintCustomizer('Histórico de Lançamentos', cols, (selectedColIds) => {
+      preparePrint('Histórico de Lançamentos', buildSaidasTableHtml(list, selectedColIds));
+      doPrint();
+    });
+  }
+
+  function printEstoqueGeral() {
+    const cols = [
+      { id: 'empenho', label: 'Empenho' },
+      { id: 'item', label: 'Item (Lote/Item)' },
+      { id: 'codigo', label: 'Código' },
+      { id: 'descricao', label: 'Descrição' },
+      { id: 'regiao', label: 'Região' },
+      { id: 'autorizado', label: 'Autorizado' },
+      { id: 'utilizado', label: 'Utilizado' },
+      { id: 'saldo', label: 'Saldo' },
+      { id: 'valor_un', label: 'Valor Unitário' },
+      { id: 'saldo_fin', label: 'Saldo Financeiro' },
+      { id: 'status', label: 'Status' }
+    ];
+
+    openPrintCustomizer('Saldo de Empenhos', cols, (selectedColIds) => {
+      const html = buildEstoqueTableHtml(appData.itens, selectedColIds);
+      preparePrint('Relatório Geral de Saldo de Empenhos', html);
+      doPrint();
+    });
+  }
+
+  function imprimirRelatorioEspecifico(campo, valor) {
+    closeDetailModal(null);
+    const list = appData.solicitacoes.filter(s => (s[campo]||'').trim() === valor.trim());
+
+    const cols = [
+      { id: 'os_empenho', label: 'OS / Empenho' },
+      { id: 'data', label: 'Data' },
+      { id: 'evento', label: 'Evento' },
+      { id: 'item', label: 'Item' },
+      { id: 'qtd', label: 'Qtd' },
+      { id: 'local', label: 'Local' },
+      { id: 'responsavel', label: 'Responsável' },
+      { id: 'horarios', label: 'Horários' },
+      { id: 'status', label: 'Status' }
+    ];
+
+    openPrintCustomizer(`Lançamentos: ${valor}`, cols, (selectedColIds) => {
+      preparePrint(`Lançamentos: ${valor}`, buildSaidasTableHtml(list, selectedColIds));
+      doPrint();
+    });
+  }
+
+  function imprimirRelatorioItem(itemCode, empNo) {
+    closeDetailModal(null);
+    const item    = appData.itens.find(it => it['Nº Empenho'] === empNo && it['Código'] == itemCode);
+    if (!item) return;
+    const list    = appData.solicitacoes.filter(s => s['Nº Empenho'] === empNo && s['Código Item'] == itemCode);
+
+    const cols = [
+      { id: 'os_empenho', label: 'OS / Empenho' },
+      { id: 'data', label: 'Data' },
+      { id: 'evento', label: 'Evento' },
+      { id: 'item', label: 'Item' },
+      { id: 'qtd', label: 'Qtd' },
+      { id: 'local', label: 'Local' },
+      { id: 'responsavel', label: 'Responsável' },
+      { id: 'horarios', label: 'Horários' },
+      { id: 'status', label: 'Status' }
+    ];
+
+    openPrintCustomizer(`Consumo: Item ${item['Código']}`, cols, (selectedColIds) => {
+      const header  = `<div style="border:1px solid #ccc; padding:10px; border-radius:4px; margin-bottom:12px; font-size:11px; background:#f9f9f9;">
+        <strong>Item:</strong> ${item['Código']} — ${item['Descrição']} | <strong>Empenho:</strong> ${item['Nº Empenho']}<br>
+        <strong>Autorizado:</strong> ${item['Qtde Autorizada']} | <strong>Utilizado:</strong> ${item.qtyUtilizada} | <strong>Saldo:</strong> ${item.qtyDisponivel} ${item['Unidade']}<br>
+        <strong>Valor Un.:</strong> ${formatCurrency(item['Valor Unitário'])} | <strong>Saldo Fin.:</strong> ${formatCurrency(item.qtyDisponivel * item['Valor Unitário'])}
+      </div>`;
+      preparePrint(`Consumo: Item ${item['Código']}`, header + buildSaidasTableHtml(list, selectedColIds));
+      doPrint();
+    });
+  }
+
+  function doPrint() {
+    document.body.className = 'print-geral-relatorio';
+    window.print();
+    setTimeout(() => { document.body.className = ''; }, 200);
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════
+     UTILITIES
+  ═══════════════════════════════════════════════════════════════════════ */
+  function formatCurrency(val) {
+    const n = Number(val);
+    if (isNaN(n)) return 'R$\u00A00,00';
+    return 'R$\u00A0' + n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  function formatDate(dateStr) {
+    if (!dateStr) return '-';
+    const s = String(dateStr).split('-');
+    if (s.length === 3) return `${s[2]}/${s[1]}/${s[0]}`;
+    return dateStr;
+  }
+
+  function formatMultiDates(datesStr) {
+    if (!datesStr) return '<span style="color:var(--text-muted);font-size:11px;">—</span>';
+    return String(datesStr)
+      .split(',')
+      .map(d => {
+        const trimmed = d.trim();
+        const s = trimmed.split('-');
+        if (s.length === 3 && s[0].length === 4) {
+          return `${s[2]}/${s[1]}/${s[0]}`;
+        }
+        return trimmed;
+      })
+      .join(', ');
+  }
+
+  function formatTime(timeStr) {
+    if (!timeStr) return '--:--';
+    const s = String(timeStr).trim();
+    // Already HH:MM (from fixed backend)
+    if (/^\d{2}:\d{2}$/.test(s)) return s;
+    // HH:MM:SS
+    if (/^\d{2}:\d{2}:\d{2}$/.test(s)) return s.substring(0, 5);
+    // Legacy 1899-12-30 HH:MM:SS (fallback for old data already in sheet)
+    const m1899 = s.match(/1899-12-30[T ](\d{2}):(\d{2})/);
+    if (m1899) return `${m1899[1]}:${m1899[2]}`;
+    // ISO string
+    const mISO = s.match(/T(\d{2}):(\d{2})/);
+    if (mISO) return `${mISO[1]}:${mISO[2]}`;
+    // Anything with colon: take first 5 chars
+    if (s.includes(':')) return s.substring(0, 5);
+    return s;
+  }
+
+  function escapeAttr(str) {
+    return String(str || '')
+      .split('\\').join('\\\\')
+      .split("'").join("\\'")
+      .split('"').join('&quot;');
+  }
+
+  function showLoading(msg) {
+    document.getElementById('loading-message').textContent = msg || 'Aguarde...';
+    document.getElementById('loading').classList.remove('hidden');
+  }
+
+  function hideLoading() {
+    document.getElementById('loading').classList.add('hidden');
+  }
+
+  function showToast(message, type = 'success') {
+    const toast = document.getElementById('toast');
+    toast.textContent = message;
+    toast.className   = `toast show ${type}`;
+    setTimeout(() => toast.classList.remove('show'), 4500);
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════
+     MOCK DATA (modo de desenvolvimento local)
+  ═══════════════════════════════════════════════════════════════════════ */
+  function getMockData() {
+    return {
+      empenhos: [{
+        'Nº Empenho': '004205/2026', 'Tipo': 'Global', 'Data Emissão': '2026-05-18',
+        'Vencimento': '2026-12-31', 'Processo': '11738', 'Licitação': 'Pregão nº 23/2025',
+        'Fornecedor': 'EGM EVENTOS LTDA', 'CNPJ': '11.412.274/0001-04', 'Órgão': 'SETUR',
+        'Dotação': '23.695.0001', 'Valor Empenhado': 3009550.00,
+        valorConsumido: 63230, saldo: 2946320, pctUtilizado: 0.021, status: 'Ativo', 'Link PDF': ''
+      }],
+      itens: [
+        { 'Nº Empenho': '004205/2026', 'Lote': 60, 'Item': 20, 'Código': '72200', 'Descrição': 'Som de palestra para atividades eventuais', 'Região': 'Costa Sul',         'Unidade': 'UND/DIA', 'Qtde Autorizada': 65,  'Valor Unitário': 2250, qtyUtilizada: 0, qtyDisponivel: 65,  pctUtilizado: 0,    status: 'Disponível' },
+        { 'Nº Empenho': '004205/2026', 'Lote': 60, 'Item': 21, 'Código': '72201', 'Descrição': 'Som de palestra para atividades eventuais', 'Região': 'Centro-Costa Norte','Unidade': 'UND/DIA', 'Qtde Autorizada': 30,  'Valor Unitário': 2200, qtyUtilizada: 0, qtyDisponivel: 30,  pctUtilizado: 0,    status: 'Disponível' },
+        { 'Nº Empenho': '004205/2026', 'Lote': 60, 'Item': 22, 'Código': '72202', 'Descrição': 'Som e luz de dupla musical',                'Região': 'Costa Sul',         'Unidade': 'UND/DIA', 'Qtde Autorizada': 65,  'Valor Unitário': 3500, qtyUtilizada: 4, qtyDisponivel: 61,  pctUtilizado: 0.06, status: 'Disponível' },
+        { 'Nº Empenho': '004205/2026', 'Lote': 60, 'Item': 23, 'Código': '72203', 'Descrição': 'Som e luz de dupla musical',                'Região': 'Centro-Costa Norte','Unidade': 'UND/DIA', 'Qtde Autorizada': 30,  'Valor Unitário': 3650, qtyUtilizada: 0, qtyDisponivel: 30,  pctUtilizado: 0,    status: 'Disponível' },
+        { 'Nº Empenho': '004205/2026', 'Lote': 60, 'Item': 24, 'Código': '72204', 'Descrição': 'Som e luz p/ pequenas bandas',              'Região': 'Costa Sul',         'Unidade': 'UND/DIA', 'Qtde Autorizada': 260, 'Valor Unitário': 5480, qtyUtilizada: 6, qtyDisponivel: 254, pctUtilizado: 0.023, status: 'Disponível' },
+        { 'Nº Empenho': '004205/2026', 'Lote': 60, 'Item': 25, 'Código': '72205', 'Descrição': 'Som e luz p/ pequenas bandas',              'Região': 'Centro-Costa Norte','Unidade': 'UND/DIA', 'Qtde Autorizada': 190, 'Valor Unitário': 5450, qtyUtilizada: 3, qtyDisponivel: 187, pctUtilizado: 0.016, status: 'Disponível' }
+      ],
+      solicitacoes: [
+        { 'Nº Solicitação': '0074/2026',  'Nº Empenho': '004205/2026', 'Data Solicitação': '2026-03-17', 'Nome do Evento': 'VARANDA MUSICAL (PAÚBA)',   'Datas do Evento': '28/03, 25/04, 27/06, 25/07, 29/08, 26/09/2026', 'Horário Início': '17:00', 'Horário Fim': '23:59', 'Código Item': '72204', 'Qtde Consumida': 6, 'Local do Evento': 'R. José Benedito de Almeida 30, Paúba', 'Resp. Montagem': 'SORMANI', 'Contato Resp.': '(11) 99632-6204', 'Status': 'Realizado',  'Nº Nota Fiscal': '', 'Observações': '', 'Link PDF': '' },
+        { 'Nº Solicitação': '0142/2026',  'Nº Empenho': '004205/2026', 'Data Solicitação': '2026-04-17', 'Nome do Evento': '13° ARRAIÁ DE BAREQUEÇABA', 'Datas do Evento': '10, 11 e 12/07/2026',                         'Horário Início': '19:00', 'Horário Fim': '23:59', 'Código Item': '72205', 'Qtde Consumida': 3, 'Local do Evento': 'Quadra de Esporte de Barequeçaba',    'Resp. Montagem': 'SABARE', 'Contato Resp.': '(12) 99734-0961', 'Status': 'Solicitado', 'Nº Nota Fiscal': '', 'Observações': '', 'Link PDF': '' },
+        { 'Nº Solicitação': '0158/2026',  'Nº Empenho': '004205/2026', 'Data Solicitação': '2026-05-01', 'Nome do Evento': 'RITMOS & DANÇAS (MAIO)',    'Datas do Evento': '06, 13, 20 e 27/05/2026',                     'Horário Início': '18:00', 'Horário Fim': '21:00', 'Código Item': '72202', 'Qtde Consumida': 4, 'Local do Evento': 'Praça Por do Sol, Boiçucanga',         'Resp. Montagem': 'KAKÁ',   'Contato Resp.': '(12) 99658-9594', 'Status': 'Realizado',  'Nº Nota Fiscal': '', 'Observações': '', 'Link PDF': '' }
+      ]
+    };
+  }
+  </script>
+  <div style="position: fixed; bottom: 6px; right: 10px; font-size: 9px; color: #c0c8d4; pointer-events: none; z-index: 1; letter-spacing: 0.3px;">v1.28 • SETUR</div>
+</body>
+</html>
