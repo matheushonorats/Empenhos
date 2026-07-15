@@ -1061,9 +1061,12 @@
 
       <!-- Sub-tab: Logs -->
       <div id="admin-logs" class="admin-tab-content">
-        <div class="section-title" style="margin-bottom:16px;">
+        <div class="section-title" style="margin-bottom:16px; display:flex; justify-content:space-between; align-items:center;">
           <h2>Log de Atividades</h2>
-          <button class="btn btn-secondary" style="padding:8px 16px; font-size:13px;" onclick="carregarLogs()">Atualizar</button>
+          <div style="display:flex; gap:10px;">
+            <button class="btn btn-secondary" style="padding:8px 16px; font-size:13px;" onclick="carregarLogs()">Atualizar</button>
+            <button class="btn btn-danger" style="padding:8px 16px; font-size:13px; background-color:#ef4444;" onclick="confirmarRotacaoLogs()">Arquivar Logs Antigos (Drive)</button>
+          </div>
         </div>
         <div class="filter-bar" style="margin-bottom:16px;">
           <div class="form-group" style="flex:2;">
@@ -2417,6 +2420,48 @@
     }
   }
 
+  async function confirmarRotacaoLogs() {
+    if (!authToken || !currentUser || currentUser.perfil !== 'admin') return;
+    const ok = await showConfirm(
+      'Arquivar Logs Antigos',
+      'Deseja exportar para o Google Drive e remover da planilha todos os logs anteriores aos últimos 30 dias?',
+      'Arquivar e Limpar',
+      true
+    );
+    if (!ok) return;
+
+    showLoading('Arquivando logs antigos...');
+    if (typeof google !== 'undefined' && google.script && google.script.run) {
+      google.script.run
+        .withSuccessHandler(onLogsRotated)
+        .withFailureHandler(onLogsRotationFailed)
+        .rotacionarLogs(authToken, 30);
+    } else {
+      setTimeout(() => {
+        onLogsRotated({ success: true, archivedCount: 15, keptCount: 5, fileName: 'Logs_Backup_2026_07_15_152218.txt' });
+      }, 1500);
+    }
+  }
+
+  function onLogsRotated(result) {
+    hideLoading();
+    if (!result.success) {
+      showToast('Erro: ' + result.error, 'error');
+      return;
+    }
+    if (result.archivedCount === 0) {
+      showToast(result.message || 'Nenhum log antigo encontrado para arquivar.');
+    } else {
+      showToast(`Sucesso! ${result.archivedCount} logs arquivados no arquivo: ${result.fileName}`);
+      carregarLogs();
+    }
+  }
+
+  function onLogsRotationFailed() {
+    hideLoading();
+    showToast('Falha na comunicação com o servidor ao tentar arquivar logs.', 'error');
+  }
+
   function renderLogs(result) {
     hideLoading();
     if (!result.success) { showToast('Erro: ' + result.error, 'error'); return; }
@@ -3055,6 +3100,6 @@
     };
   }
   </script>
-  <div style="position: fixed; bottom: 6px; right: 10px; font-size: 9px; color: #c0c8d4; pointer-events: none; z-index: 1; letter-spacing: 0.3px;">v1.28 • SETUR</div>
+  <div style="position: fixed; bottom: 6px; right: 10px; font-size: 9px; color: #c0c8d4; pointer-events: none; z-index: 1; letter-spacing: 0.3px;">v1.29 • SETUR</div>
 </body>
 </html>

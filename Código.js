@@ -869,3 +869,94 @@ function editarEmpenhoComItens(token, numeroEmpenhoOriginal, payload) {
   }
 }
 
+/**
+ * Rotação de logs: Exporta logs antigos (mais velhos que 'diasLimite')
+ * para um arquivo TXT no Google Drive e os remove da planilha para liberar espaço.
+ */
+function rotacionarLogs(token, diasLimite) {
+  try {
+    const u = validarToken(token);
+    if (!u || u.perfil !== 'admin') return { success: false, error: 'Acesso negado. Apenas administradores podem rotacionar logs.' };
+
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const sheet = ss.getSheetByName(SHEETS.LOG);
+    if (!sheet) return { success: false, error: 'Aba de logs não encontrada.' };
+
+    const lastRow = sheet.getLastRow();
+    if (lastRow <= 1) return { success: true, archivedCount: 0, message: 'Nenhum log para arquivar.' };
+
+    const now = new Date();
+    const limiteMs = now.getTime() - (Number(diasLimite) * 24 * 60 * 60 * 1000);
+    const limitDate = new Date(limiteMs);
+
+    const range = sheet.getRange(2, 1, lastRow - 1, sheet.getLastColumn());
+    const values = range.getValues();
+    const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+
+    const logsParaArquivar = [];
+    const logsParaManter = [];
+
+    values.forEach(row => {
+      const timestamp = row[0];
+      if (timestamp instanceof Date && timestamp.getTime() < limiteMs) {
+        logsParaArquivar.push(row);
+      } else {
+        logsParaManter.push(row);
+      }
+    });
+
+    if (logsParaArquivar.length === 0) {
+      const limitStr = Utilities.formatDate(limitDate, Session.getScriptTimeZone(), 'dd/MM/yyyy');
+      return { 
+        success: true, 
+        archivedCount: 0, 
+        message: 'Nenhum log anterior a ' + limitStr + ' encontrado.' 
+      };
+    }
+
+    // Formata os logs para salvar em arquivo (TSV)
+    let txtContent = headers.join('\t') + '\r\n';
+    logsParaArquivar.forEach(row => {
+      const formattedRow = row.map(val => {
+        if (val instanceof Date) {
+          return Utilities.formatDate(val, Session.getScriptTimeZone(), 'yyyy-MM-dd HH:mm:ss');
+        }
+        return String(val).replace(/\r?\n|\r/g, ' ');
+      });
+      txtContent += formattedRow.join('\t') + '\r\n';
+    });
+
+    // Cria pasta de arquivamento no Drive se não existir
+    const folderName = 'Empenhos_Logs_Arquivo';
+    const folders = DriveApp.getFoldersByName(folderName);
+    const folder = folders.hasNext() ? folders.next() : DriveApp.createFolder(folderName);
+
+    // Salva o backup
+    const dataFmt = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy_MM_dd_HHmmss');
+    const nomeArquivo = 'Logs_Backup_' + dataFmt + '.txt';
+    const file = folder.createFile(nomeArquivo, txtContent, MimeType.PLAIN_TEXT);
+
+    // Limpa os dados na planilha e reinsere o cabeçalho + logs preservados
+    sheet.clearContents();
+    sheet.appendRow(headers);
+    if (logsParaManter.length > 0) {
+      sheet.getRange(2, 1, logsParaManter.length, headers.length).setValues(logsParaManter);
+    }
+
+    // Grava registro da operação de rotação
+    registrarLog(token, 'ROTACAO_LOGS', 'Arquivados ' + logsParaArquivar.length + ' logs antigos no Drive. Arquivo: ' + nomeArquivo);
+
+    return {
+      success: true,
+      archivedCount: logsParaArquivar.length,
+      keptCount: logsParaManter.length,
+      fileName: nomeArquivo,
+      fileUrl: file.getUrl()
+    };
+  } catch (e) {
+    Logger.log(e);
+    return { success: false, error: e.message };
+  }
+}
+
+
